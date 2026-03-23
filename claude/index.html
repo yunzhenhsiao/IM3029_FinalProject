@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深藍求生 — 小丑魚的掙扎</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Orbitron:wght@400;700&display=swap');
+
+  :root {
+    --ocean-deep: #020c1b;
+    --ocean-mid: #0a2540;
+    --ocean-light: #0d4f8c;
+    --ocean-glow: #1a8cff;
+    --coral: #ff6b35;
+    --seafoam: #00d4aa;
+    --danger: #ff3366;
+    --warning: #ffcc00;
+    --sand: #f4e4c1;
+    --trash-color: #8a9a6a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--ocean-deep);
+    font-family: 'Noto Serif TC', serif;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    cursor: none;
+  }
+
+  /* ====== CUSTOM CURSOR ====== */
+  #cursor {
+    position: fixed;
+    width: 20px; height: 20px;
+    background: radial-gradient(circle, rgba(0,212,170,0.8), transparent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%,-50%);
+    transition: transform 0.1s;
+  }
+
+  /* ====== PROLOGUE SCREEN ====== */
+  #prologue {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, #020c1b 0%, #000510 100%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .prologue-fish {
+    font-size: 80px;
+    animation: floatFish 3s ease-in-out infinite;
+    margin-bottom: 30px;
+    filter: drop-shadow(0 0 20px rgba(255,107,53,0.6));
+  }
+
+  @keyframes floatFish {
+    0%,100% { transform: translateY(0) rotate(-5deg); }
+    50% { transform: translateY(-15px) rotate(5deg); }
+  }
+
+  #prologue-text {
+    color: var(--sand);
+    font-size: clamp(16px, 2.5vw, 22px);
+    line-height: 2.2;
+    text-align: center;
+    max-width: 700px;
+    min-height: 200px;
+    text-shadow: 0 0 20px rgba(26,140,255,0.5);
+    letter-spacing: 0.05em;
+  }
+
+  #prologue-text .highlight {
+    color: var(--seafoam);
+    font-weight: 700;
+  }
+
+  .start-btn {
+    margin-top: 50px;
+    padding: 18px 60px;
+    background: transparent;
+    border: 2px solid var(--seafoam);
+    color: var(--seafoam);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 20px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    opacity: 0;
+  }
+
+  .start-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--seafoam);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+    z-index: -1;
+  }
+
+  .start-btn:hover::before { transform: scaleX(1); }
+  .start-btn:hover { color: var(--ocean-deep); }
+  .start-btn.visible { opacity: 1; animation: fadeIn 1s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .prologue-stars {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 70%, rgba(255,255,255,0.15) 0%, transparent 100%),
+      radial-gradient(2px 2px at 40% 60%, rgba(26,140,255,0.2) 0%, transparent 100%);
+  }
+
+  /* ====== GAME SCREEN ====== */
+  #game-screen {
+    position: fixed; inset: 0;
+    display: none;
+    flex-direction: column;
+  }
+
+  #ocean-canvas {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    animation: oceanBreath 8s ease-in-out infinite;
+  }
+
+  @keyframes oceanBreath {
+    0%,100% { filter: hue-rotate(0deg) brightness(1); }
+    50% { filter: hue-rotate(15deg) brightness(0.95); }
+  }
+
+  /* Fish bubbles background */
+  .bg-fish {
+    position: absolute;
+    font-size: 24px;
+    opacity: 0.15;
+    animation: swimRight linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes swimRight {
+    from { transform: translateX(-80px); }
+    to { transform: translateX(110vw); }
+  }
+
+  /* ====== HUD ====== */
+  #hud {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: linear-gradient(to bottom, rgba(2,12,27,0.9), transparent);
+    z-index: 100;
+  }
+
+  .hud-label {
+    color: rgba(255,255,255,0.5);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  #hp-container { flex: 0 0 200px; }
+
+  #hp-bar-bg {
+    width: 200px; height: 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  #hp-bar {
+    height: 100%;
+    width: 100%;
+    border-radius: 6px;
+    background: linear-gradient(to right, #00d4aa, #1aff8c);
+    transition: width 0.3s, background 0.5s;
+  }
+
+  #score-display {
+    color: white;
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    text-shadow: 0 0 10px var(--ocean-glow);
+    margin-left: auto;
+  }
+
+  #level-display {
+    color: var(--warning);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    padding: 4px 12px;
+    border: 1px solid var(--warning);
+    border-radius: 20px;
+  }
+
+  #timer-display {
+    color: rgba(255,255,255,0.7);
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+  }
+
+  /* Level announcement */
+  #level-announce {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  #level-announce h2 {
+    font-size: clamp(32px, 6vw, 60px);
+    color: white;
+    text-shadow: 0 0 30px var(--ocean-glow);
+    letter-spacing: 0.1em;
+  }
+
+  #level-announce p {
+    color: var(--seafoam);
+    font-size: 18px;
+    margin-top: 10px;
+  }
+
+  /* ====== PLAYER FISH ====== */
+  #player {
+    position: absolute;
+    font-size: 40px;
+    z-index: 50;
+    transition: left 0.08s, top 0.08s;
+    filter: drop-shadow(0 0 8px rgba(255,107,53,0.8));
+    pointer-events: none;
+    transform: translateX(-50%) translateY(-50%);
+  }
+
+  #player.hurt {
+    animation: hurtFlash 0.4s ease;
+  }
+
+  @keyframes hurtFlash {
+    0%,100% { filter: drop-shadow(0 0 8px rgba(255,107,53,0.8)); }
+    50% { filter: drop-shadow(0 0 20px rgba(255,0,0,1)) brightness(2); }
+  }
+
+  /* ====== SEAWEED ====== */
+  .seaweed {
+    position: absolute;
+    font-size: 28px;
+    z-index: 30;
+    animation: sway 2s ease-in-out infinite;
+    cursor: default;
+    filter: drop-shadow(0 0 5px rgba(0,212,170,0.5));
+    pointer-events: none;
+  }
+
+  @keyframes sway {
+    0%,100% { transform: rotate(-10deg); }
+    50% { transform: rotate(10deg); }
+  }
+
+  /* ====== TRASH ITEMS ====== */
+  .trash {
+    position: absolute;
+    z-index: 40;
+    pointer-events: none;
+    transition: transform 0.1s;
+    cursor: default;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .trash-emoji {
+    font-size: 36px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    animation: trashDrift 3s ease-in-out infinite;
+  }
+
+  .trash.large .trash-emoji { font-size: 52px; }
+  .trash.huge .trash-emoji { font-size: 68px; }
+
+  @keyframes trashDrift {
+    0%,100% { transform: rotate(-8deg) scale(1); }
+    50% { transform: rotate(8deg) scale(1.05); }
+  }
+
+  .trash-label {
+    background: rgba(0,0,0,0.7);
+    color: #ff9966;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+  }
+
+  /* ====== PARTICLES ====== */
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 60;
+    animation: particleFade 0.8s ease-out forwards;
+  }
+
+  @keyframes particleFade {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0) translateY(-30px); }
+  }
+
+  /* ====== ENDING SCREEN ====== */
+  #ending-screen {
+    position: fixed; inset: 0;
+    background: rgba(2,5,15,0.95);
+    z-index: 900;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    backdrop-filter: blur(10px);
+  }
+
+  #ending-title {
+    font-size: clamp(24px, 5vw, 48px);
+    color: var(--warning);
+    text-align: center;
+    text-shadow: 0 0 30px rgba(255,204,0,0.5);
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+
+  #ending-subtitle {
+    color: rgba(255,255,255,0.5);
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    margin-bottom: 30px;
+  }
+
+  #ending-message {
+    color: var(--sand);
+    font-size: clamp(14px, 2vw, 18px);
+    line-height: 2;
+    text-align: center;
+    max-width: 600px;
+    margin-bottom: 20px;
+  }
+
+  #ending-trash-info {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 20px 30px;
+    margin: 15px 0;
+    max-width: 500px;
+    width: 100%;
+  }
+
+  #ending-trash-info h4 {
+    color: var(--seafoam);
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .trash-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .trash-stat:last-child { border-bottom: none; }
+  .trash-stat .years { color: var(--danger); font-weight: 700; }
+
+  .ending-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .ending-btn {
+    padding: 14px 35px;
+    border: none;
+    border-radius: 30px;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 15px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    transition: all 0.3s;
+  }
+
+  .btn-restart {
+    background: linear-gradient(135deg, var(--ocean-glow), var(--seafoam));
+    color: white;
+  }
+
+  .btn-beach {
+    background: linear-gradient(135deg, #ff6b35, #ff9a3c);
+    color: white;
+  }
+
+  .ending-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+
+  /* ====== BEACH CLEANUP SCREEN ====== */
+  #beach-screen {
+    position: fixed; inset: 0;
+    z-index: 950;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 50%, #f4e4c1 50%, #f4e4c1 100%);
+  }
+
+  #beach-header {
+    padding: 20px;
+    text-align: center;
+    background: rgba(255,255,255,0.3);
+    width: 100%;
+    backdrop-filter: blur(5px);
+  }
+
+  #beach-header h2 {
+    font-size: 24px;
+    color: #1a3a5c;
+    letter-spacing: 0.1em;
+  }
+
+  #beach-header p {
+    color: rgba(26,58,92,0.7);
+    font-size: 13px;
+    margin-top: 5px;
+  }
+
+  #beach-area {
+    flex: 1;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .beach-trash {
+    position: absolute;
+    font-size: 40px;
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.3s;
+    filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.3));
+    animation: beachSway 2.5s ease-in-out infinite;
+    user-select: none;
+  }
+
+  .beach-trash:hover { transform: scale(1.2) rotate(10deg); }
+
+  @keyframes beachSway {
+    0%,100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+  }
+
+  #beach-progress {
+    position: absolute;
+    top: 15px; right: 20px;
+    background: rgba(255,255,255,0.8);
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    color: #1a3a5c;
+    font-weight: 700;
+  }
+
+  /* ====== CERTIFICATE ====== */
+  #certificate {
+    position: fixed; inset: 0;
+    z-index: 990;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+  }
+
+  #cert-inner {
+    background: linear-gradient(135deg, #fffef0, #f4e8c1);
+    border: 4px solid #d4a843;
+    border-radius: 16px;
+    padding: 50px 60px;
+    text-align: center;
+    max-width: 550px;
+    width: 90%;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 0 40px rgba(212,168,67,0.1);
+  }
+
+  #cert-inner::before, #cert-inner::after {
+    content: '✦';
+    position: absolute;
+    font-size: 30px;
+    color: #d4a843;
+  }
+  #cert-inner::before { top: 20px; left: 20px; }
+  #cert-inner::after { bottom: 20px; right: 20px; }
+
+  #cert-inner h1 {
+    font-size: 13px;
+    letter-spacing: 0.3em;
+    color: #8a6520;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+  }
+
+  #cert-inner h2 {
+    font-size: 32px;
+    color: #1a3a5c;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+
+  #cert-name {
+    font-size: 22px;
+    color: #d4a843;
+    font-weight: 900;
+    margin: 15px 0;
+    letter-spacing: 0.1em;
+  }
+
+  #cert-inner p {
+    color: #5a4020;
+    font-size: 14px;
+    line-height: 1.8;
+    margin-bottom: 10px;
+  }
+
+  #cert-seal {
+    font-size: 60px;
+    margin: 15px 0;
+    animation: rotateSeal 10s linear infinite;
+  }
+
+  @keyframes rotateSeal {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  #cert-date {
+    font-size: 12px;
+    color: #8a6520;
+    letter-spacing: 0.1em;
+    margin-top: 15px;
+  }
+
+  .cert-close-btn {
+    margin-top: 20px;
+    padding: 12px 40px;
+    background: linear-gradient(135deg, #d4a843, #f0c84a);
+    border: none;
+    border-radius: 25px;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 15px;
+    color: #1a3a5c;
+    cursor: pointer;
+    font-weight: 700;
+    transition: all 0.3s;
+  }
+
+  .cert-close-btn:hover { transform: scale(1.05); }
+
+  /* ====== LEVEL OVERLAY ====== */
+  #level-overlay {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 80;
+    transition: all 3s ease;
+  }
+
+  /* ====== FLOATING TEXT ====== */
+  .float-text {
+    position: absolute;
+    font-size: 18px;
+    font-weight: 700;
+    pointer-events: none;
+    z-index: 150;
+    animation: floatUp 1.2s ease-out forwards;
+  }
+
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-60px); }
+  }
+
+  /* ====== SEAWEED HEALTH BAR ====== */
+  .seaweed-item {
+    position: absolute;
+    z-index: 35;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
+  /* ====== WAVE EFFECT ====== */
+  .wave-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: linear-gradient(to top, rgba(2,12,27,0.4), transparent);
+    pointer-events: none;
+    z-index: 20;
+  }
+
+  /* Seaweed bounce floor */
+  .seaweed-base {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 80px;
+    display: flex;
+    align-items: flex-end;
+    pointer-events: none;
+    z-index: 25;
+  }
+
+  .seaweed-base-item {
+    font-size: 32px;
+    margin: 0 5px;
+    animation: sway 2s ease-in-out infinite;
+  }
+
+  .seaweed-base-item:nth-child(odd) { animation-delay: -1s; }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+
+<!-- ====== PROLOGUE ====== -->
+<div id="prologue">
+  <div class="prologue-stars"></div>
+  <div class="prologue-fish">🐠</div>
+  <div id="prologue-text"></div>
+  <button class="start-btn" id="start-btn" onclick="startGame()">開始生存</button>
+</div>
+
+<!-- ====== GAME SCREEN ====== -->
+<div id="game-screen">
+  <canvas id="ocean-canvas"></canvas>
+
+  <!-- Level overlay tint -->
+  <div id="level-overlay"></div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div id="hp-container">
+      <div class="hud-label">生命值</div>
+      <div id="hp-bar-bg"><div id="hp-bar"></div></div>
+    </div>
+    <div id="level-display">LEVEL 1</div>
+    <div id="timer-display">00:00</div>
+    <div id="score-display">0</div>
+  </div>
+
+  <!-- Level announcement -->
+  <div id="level-announce">
+    <h2 id="level-announce-title"></h2>
+    <p id="level-announce-sub"></p>
+  </div>
+
+  <!-- Player -->
+  <div id="player">🐠</div>
+
+  <!-- Wave bottom -->
+  <div class="wave-overlay"></div>
+
+  <!-- Seaweed base decoration -->
+  <div class="seaweed-base" id="seaweed-base"></div>
+</div>
+
+<!-- ====== ENDING SCREEN ====== -->
+<div id="ending-screen">
+  <div id="ending-title"></div>
+  <div id="ending-subtitle"></div>
+  <div id="ending-message"></div>
+  <div id="ending-trash-info">
+    <h4>🌊 你遭遇的海洋污染物</h4>
+    <div id="trash-stats"></div>
+  </div>
+  <div class="ending-buttons">
+    <button class="ending-btn btn-restart" onclick="restartGame()">🔄 重新投胎</button>
+    <button class="ending-btn btn-beach" onclick="startBeachCleanup()">🏖️ 拯救地球行動</button>
+  </div>
+</div>
+
+<!-- ====== BEACH CLEANUP SCREEN ====== -->
+<div id="beach-screen">
+  <div id="beach-header">
+    <h2>🏖️ 沙灘淨化行動</h2>
+    <p>點擊垃圾，將它們從海灘上清除！</p>
+  </div>
+  <div id="beach-area">
+    <div id="beach-progress">已清理：0 / 20</div>
+  </div>
+</div>
+
+<!-- ====== CERTIFICATE ====== -->
+<div id="certificate">
+  <div id="cert-inner">
+    <h1>海洋守護聯盟</h1>
+    <h2>海洋守護冠軍</h2>
+    <div id="cert-seal">🏆</div>
+    <div id="cert-name">環境英雄</div>
+    <p>茲證明此位勇士已完成沙灘淨化行動，<br>共清理 <strong>20</strong> 件海洋垃圾，<br>為海洋生物創造了更安全的家園。</p>
+    <p id="cert-date"></p>
+    <button class="cert-close-btn" onclick="closeCertificate()">感謝你的付出 🌊</button>
+  </div>
+</div>
+
+<script>
+// ====== CURSOR ======
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+});
+
+// ====== TRASH DATABASE ======
+const trashDB = [
+  { emoji: '🥤', name: '塑膠吸管', years: 200, damage: 20, size: 'normal' },
+  { emoji: '🍶', name: '塑膠飲料瓶', years: 450, damage: 30, size: 'large' },
+  { emoji: '🛍️', name: '塑膠袋', years: 20, damage: 15, size: 'normal' },
+  { emoji: '🥫', name: '金屬罐', years: 80, damage: 25, size: 'normal' },
+  { emoji: '🍱', name: '發泡膠飯盒', years: 500, damage: 35, size: 'large' },
+  { emoji: '🪣', name: '塑膠水桶', years: 400, damage: 40, size: 'large' },
+  { emoji: '🥾', name: '舊鞋子', years: 25, damage: 20, size: 'normal' },
+  { emoji: '🧴', name: '洗髮水樽', years: 450, damage: 30, size: 'large' },
+  { emoji: '🖥️', name: '電子廢料', years: 1000, damage: 50, size: 'huge' },
+  { emoji: '🛞', name: '廢棄輪胎', years: 2000, damage: 60, size: 'huge' },
+];
+
+// ====== PROLOGUE TYPEWRITER ======
+const prologueLines = [
+  '你是一條出生在 2026 年的小丑魚。',
+  '',
+  '你的祖輩告訴你，',
+  '大海曾經是<span class="highlight">純淨的藍色</span>。',
+  '',
+  '但現在，你的食物裡夾雜著透明的陷阱，',
+  '你的家園正被<span class="highlight">無聲的侵略者</span>佔領。',
+  '',
+  '<span class="highlight">你能活著見到明天的太陽嗎？</span>',
+];
+
+let prologueDone = false;
+
+async function typewriterEffect() {
+  const el = document.getElementById('prologue-text');
+  let fullHTML = '';
+  for (let i = 0; i < prologueLines.length; i++) {
+    const line = prologueLines[i];
+    if (line === '') {
+      fullHTML += '<br>';
+      el.innerHTML = fullHTML;
+      await sleep(300);
+      continue;
+    }
+    // strip span tags for char-by-char typing
+    const plain = line.replace(/<[^>]+>/g, '');
+    const hasSpan = line.includes('<span');
+    let lineHTML = '';
+    for (let c = 0; c < plain.length; c++) {
+      lineHTML += plain[c];
+      if (hasSpan) {
+        el.innerHTML = fullHTML + (line.substring(0, line.indexOf(plain[c])+1+line.length - plain.length));
+      } else {
+        el.innerHTML = fullHTML + lineHTML;
+      }
+      await sleep(55);
+    }
+    if (hasSpan) {
+      fullHTML += line + '<br>';
+    } else {
+      fullHTML += lineHTML + '<br>';
+    }
+    el.innerHTML = fullHTML;
+    await sleep(200);
+  }
+  prologueDone = true;
+  const btn = document.getElementById('start-btn');
+  btn.classList.add('visible');
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+typewriterEffect();
+
+// ====== GAME STATE ======
+let gameRunning = false;
+let hp = 100;
+let score = 0;
+let elapsed = 0;
+let level = 1;
+let trashItems = [];
+let seaweeds = [];
+let spawnInterval = null;
+let gameLoop = null;
+let timerInterval = null;
+let encounterLog = {};
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+
+const levelData = [
+  { time: 0,   name: 'LEVEL 1', subtitle: '微光海洋', spawnRate: 2000, maxTrash: 5,  brightness: 1.0, music: 'light' },
+  { time: 15,  name: 'LEVEL 2', subtitle: '灰色地帶', spawnRate: 900,  maxTrash: 12, brightness: 0.6, music: 'mid'   },
+  { time: 40,  name: 'LEVEL 3', subtitle: '死亡深淵', spawnRate: 400,  maxTrash: 25, brightness: 0.4, music: 'dark'  },
+];
+
+function startGame() {
+  document.getElementById('prologue').style.transition = 'opacity 1s';
+  document.getElementById('prologue').style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('prologue').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'flex';
+    initGame();
+  }, 1000);
+}
+
+function initGame() {
+  hp = 100;
+  score = 0;
+  elapsed = 0;
+  level = 1;
+  trashItems = [];
+  seaweeds = [];
+  encounterLog = {};
+  gameRunning = true;
+
+  updateHPBar();
+  updateScoreDisplay();
+
+  // Draw ocean
+  drawOcean();
+
+  // Seaweed base
+  const base = document.getElementById('seaweed-base');
+  base.innerHTML = '';
+  const seaweedEmojis = ['🌿','🪸','🌱','🎋','🪴'];
+  for (let i = 0; i < Math.floor(window.innerWidth / 55); i++) {
+    const s = document.createElement('span');
+    s.className = 'seaweed-base-item';
+    s.textContent = seaweedEmojis[i % seaweedEmojis.length];
+    s.style.animationDelay = (Math.random() * 2) + 's';
+    base.appendChild(s);
+  }
+
+  // Spawn bg fish
+  spawnBgFish();
+
+  // Spawn initial seaweeds
+  for (let i = 0; i < 5; i++) spawnSeaweed();
+
+  // Start loops
+  startSpawning();
+  startGameLoop();
+  startTimer();
+
+  // Show level 1 announcement
+  showLevelAnnounce(levelData[0]);
+
+  // Track mouse
+  document.getElementById('game-screen').addEventListener('mousemove', onMouseMove);
+}
+
+function onMouseMove(e) {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+}
+
+function drawOcean() {
+  const canvas = document.getElementById('ocean-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  grad.addColorStop(0, '#041628');
+  grad.addColorStop(0.4, '#0a2f5a');
+  grad.addColorStop(0.7, '#0d4878');
+  grad.addColorStop(1, '#051020');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Light rays
+  ctx.save();
+  for (let i = 0; i < 6; i++) {
+    const x = (canvas.width / 5) * i + 80;
+    const grad2 = ctx.createLinearGradient(x, 0, x + 60, canvas.height * 0.7);
+    grad2.addColorStop(0, 'rgba(26,140,255,0.08)');
+    grad2.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad2;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + 60, canvas.height * 0.7);
+    ctx.lineTo(x - 10, canvas.height * 0.7);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Bubbles
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  for (let i = 0; i < 40; i++) {
+    const bx = Math.random() * canvas.width;
+    const by = Math.random() * canvas.height;
+    const br = Math.random() * 3 + 1;
+    ctx.beginPath();
+    ctx.arc(bx, by, br, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function spawnBgFish() {
+  const fishEmojis = ['🐟','🐡','🐙','🦑','🦐'];
+  const screen = document.getElementById('game-screen');
+  for (let i = 0; i < 8; i++) {
+    const f = document.createElement('div');
+    f.className = 'bg-fish';
+    f.textContent = fishEmojis[Math.floor(Math.random() * fishEmojis.length)];
+    f.style.top = (Math.random() * 80 + 5) + '%';
+    f.style.left = '-80px';
+    const dur = 20 + Math.random() * 30;
+    f.style.animation = `swimRight ${dur}s linear infinite`;
+    f.style.animationDelay = (Math.random() * -dur) + 's';
+    f.style.fontSize = (16 + Math.random() * 16) + 'px';
+    screen.appendChild(f);
+  }
+}
+
+function spawnSeaweed() {
+  const screen = document.getElementById('game-screen');
+  const sw = document.createElement('div');
+  sw.className = 'seaweed-item';
+  sw.style.left = (Math.random() * 90 + 2) + '%';
+  sw.style.top = (Math.random() * 50 + 40) + '%';
+  sw.dataset.type = 'seaweed';
+
+  const emoji = document.createElement('span');
+  emoji.className = 'seaweed';
+  emoji.style.position = 'relative';
+  emoji.style.animation = 'none';
+  emoji.textContent = ['🌿','🪸','🌱'][Math.floor(Math.random() * 3)];
+
+  sw.appendChild(emoji);
+  screen.appendChild(sw);
+  seaweeds.push({ el: sw, x: parseFloat(sw.style.left) / 100 * window.innerWidth, y: parseFloat(sw.style.top) / 100 * window.innerHeight });
+
+  // Despawn after 8s
+  setTimeout(() => {
+    sw.remove();
+    seaweeds = seaweeds.filter(s => s.el !== sw);
+  }, 8000);
+}
+
+function spawnTrash() {
+  if (!gameRunning) return;
+  const currentLevel = getCurrentLevel();
+  const existing = document.querySelectorAll('.trash').length;
+  if (existing >= currentLevel.maxTrash) return;
+
+  const screen = document.getElementById('game-screen');
+  const t = trashDB[Math.floor(Math.random() * trashDB.length)];
+
+  const el = document.createElement('div');
+  el.className = `trash ${t.size}`;
+  el.dataset.name = t.name;
+  el.dataset.years = t.years;
+  el.dataset.damage = t.damage;
+
+  const emojiEl = document.createElement('div');
+  emojiEl.className = 'trash-emoji';
+  emojiEl.textContent = t.emoji;
+
+  const labelEl = document.createElement('div');
+  labelEl.className = 'trash-label';
+  labelEl.textContent = `${t.years}年`;
+
+  el.appendChild(emojiEl);
+  el.appendChild(labelEl);
+
+  // Spawn from edges
+  const edge = Math.floor(Math.random() * 4);
+  let x, y;
+  if (edge === 0) { x = Math.random() * window.innerWidth; y = -80; }
+  else if (edge === 1) { x = window.innerWidth + 80; y = Math.random() * window.innerHeight; }
+  else if (edge === 2) { x = Math.random() * window.innerWidth; y = window.innerHeight + 80; }
+  else { x = -80; y = Math.random() * window.innerHeight; }
+
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+
+  // Random velocity toward center
+  const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+  const angle = Math.atan2(cy - y, cx - x) + (Math.random() - 0.5) * 1.5;
+  const speed = 0.5 + Math.random() * (level === 3 ? 2.5 : level === 2 ? 1.5 : 0.8);
+  el.dataset.vx = Math.cos(angle) * speed;
+  el.dataset.vy = Math.sin(angle) * speed;
+
+  screen.appendChild(el);
+  trashItems.push(el);
+
+  // Level 3 burst spawn
+  if (level === 3 && Math.random() < 0.3) {
+    setTimeout(() => spawnTrash(), 200);
+    setTimeout(() => spawnTrash(), 400);
+  }
+}
+
+function getCurrentLevel() {
+  for (let i = levelData.length - 1; i >= 0; i--) {
+    if (elapsed >= levelData[i].time) return levelData[i];
+  }
+  return levelData[0];
+}
+
+function startSpawning() {
+  spawnInterval = setInterval(() => {
+    if (!gameRunning) return;
+    const lv = getCurrentLevel();
+    spawnTrash();
+    if (Math.random() < 0.3) spawnSeaweed();
+  }, 800);
+}
+
+function startGameLoop() {
+  let lastLevel = 1;
+  gameLoop = requestAnimationFrame(function loop() {
+    if (!gameRunning) return;
+
+    // Move player toward mouse
+    const player = document.getElementById('player');
+    const px = parseFloat(player.style.left) || window.innerWidth / 2;
+    const py = parseFloat(player.style.top) || window.innerHeight / 2;
+    const dx = mouseX - px, dy = mouseY - py;
+    const newX = px + dx * 0.12;
+    const newY = py + dy * 0.12;
+    player.style.left = newX + 'px';
+    player.style.top = newY + 'px';
+    // Flip fish
+    player.style.transform = `translateX(-50%) translateY(-50%) scaleX(${dx > 5 ? 1 : dx < -5 ? -1 : 1})`;
+
+    // Move trash
+    trashItems.forEach((el, idx) => {
+      if (!el.parentNode) { trashItems.splice(idx, 1); return; }
+      const tx = parseFloat(el.style.left);
+      const ty = parseFloat(el.style.top);
+      const vx = parseFloat(el.dataset.vx);
+      const vy = parseFloat(el.dataset.vy);
+      el.style.left = (tx + vx) + 'px';
+      el.style.top = (ty + vy) + 'px';
+
+      // Bounce off edges
+      if (tx < -100 || tx > window.innerWidth + 100 || ty < -100 || ty > window.innerHeight + 100) {
+        el.remove();
+        trashItems.splice(idx, 1);
+        return;
+      }
+
+      // Collision with player
+      const distX = tx - newX, distY = ty - newY;
+      const dist = Math.sqrt(distX * distX + distY * distY);
+      const hitRadius = el.classList.contains('huge') ? 55 : el.classList.contains('large') ? 42 : 30;
+
+      if (dist < hitRadius) {
+        const dmg = parseInt(el.dataset.damage);
+        const name = el.dataset.name;
+        const years = el.dataset.years;
+        takeDamage(dmg, el, name, years);
+        el.remove();
+        trashItems.splice(idx, 1);
+      }
+    });
+
+    // Collision with seaweeds
+    seaweeds.forEach((sw, idx) => {
+      if (!sw.el.parentNode) { seaweeds.splice(idx, 1); return; }
+      const swx = sw.x, swy = sw.y;
+      const dist = Math.sqrt((swx - newX) ** 2 + (swy - newY) ** 2);
+      if (dist < 35) {
+        healPlayer(15, sw.el);
+        sw.el.remove();
+        seaweeds.splice(idx, 1);
+      }
+    });
+
+    // Level transitions
+    const newLevel = elapsed >= 40 ? 3 : elapsed >= 15 ? 2 : 1;
+    if (newLevel !== lastLevel) {
+      lastLevel = newLevel;
+      level = newLevel;
+      showLevelAnnounce(levelData[newLevel - 1]);
+      applyLevelEffects(newLevel);
+      document.getElementById('level-display').textContent = `LEVEL ${newLevel}`;
+    }
+
+    gameLoop = requestAnimationFrame(loop);
+  });
+}
+
+function applyLevelEffects(lv) {
+  const overlay = document.getElementById('level-overlay');
+  if (lv === 2) {
+    overlay.style.background = 'rgba(0,0,30,0.4)';
+    overlay.style.backdropFilter = 'brightness(0.6)';
+  } else if (lv === 3) {
+    overlay.style.background = 'rgba(20,0,0,0.5)';
+    overlay.style.backdropFilter = 'brightness(0.4) saturate(0.5)';
+  }
+}
+
+function showLevelAnnounce(data) {
+  const el = document.getElementById('level-announce');
+  document.getElementById('level-announce-title').textContent = `${data.name} — ${data.subtitle}`;
+  document.getElementById('level-announce-sub').textContent = data.time === 0 ? '遊戲開始' : '環境正在惡化…';
+  el.style.opacity = '1';
+  el.style.transition = 'opacity 0.5s';
+  setTimeout(() => {
+    el.style.opacity = '0';
+  }, 2500);
+}
+
+function takeDamage(dmg, trashEl, name, years) {
+  if (!gameRunning) return;
+  hp = Math.max(0, hp - dmg);
+
+  // Log encounter
+  if (!encounterLog[name]) encounterLog[name] = { emoji: trashEl.querySelector('.trash-emoji').textContent, count: 0, years: years };
+  encounterLog[name].count++;
+
+  updateHPBar();
+
+  // Hurt flash
+  const player = document.getElementById('player');
+  player.classList.remove('hurt');
+  void player.offsetWidth;
+  player.classList.add('hurt');
+
+  // Float damage text
+  showFloatText(`-${dmg}`, parseFloat(player.style.left), parseFloat(player.style.top), '#ff4466');
+
+  // Particles
+  spawnParticles(parseFloat(player.style.left), parseFloat(player.style.top), '#ff4466', 8);
+
+  if (hp <= 0) endGame();
+}
+
+function healPlayer(amount, seaweedEl) {
+  hp = Math.min(100, hp + amount);
+  score += 5;
+  updateHPBar();
+  updateScoreDisplay();
+
+  const player = document.getElementById('player');
+  showFloatText(`+${amount} ❤️`, parseFloat(player.style.left), parseFloat(player.style.top), '#00d4aa');
+  spawnParticles(parseFloat(player.style.left), parseFloat(player.style.top), '#00d4aa', 6);
+}
+
+function updateHPBar() {
+  const bar = document.getElementById('hp-bar');
+  bar.style.width = hp + '%';
+  if (hp > 60) bar.style.background = 'linear-gradient(to right, #00d4aa, #1aff8c)';
+  else if (hp > 30) bar.style.background = 'linear-gradient(to right, #ffcc00, #ff9900)';
+  else bar.style.background = 'linear-gradient(to right, #ff3366, #ff6633)';
+}
+
+function updateScoreDisplay() {
+  document.getElementById('score-display').textContent = score;
+}
+
+function showFloatText(text, x, y, color) {
+  const screen = document.getElementById('game-screen');
+  const el = document.createElement('div');
+  el.className = 'float-text';
+  el.textContent = text;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.style.color = color;
+  el.style.textShadow = `0 0 10px ${color}`;
+  screen.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+
+function spawnParticles(x, y, color, count) {
+  const screen = document.getElementById('game-screen');
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.width = p.style.height = (4 + Math.random() * 6) + 'px';
+    p.style.background = color;
+    p.style.left = (x + (Math.random() - 0.5) * 40) + 'px';
+    p.style.top = (y + (Math.random() - 0.5) * 40) + 'px';
+    p.style.boxShadow = `0 0 6px ${color}`;
+    screen.appendChild(p);
+    setTimeout(() => p.remove(), 800);
+  }
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    if (!gameRunning) return;
+    elapsed++;
+    score += level;
+    updateScoreDisplay();
+    const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+    const s = (elapsed % 60).toString().padStart(2, '0');
+    document.getElementById('timer-display').textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+function endGame() {
+  gameRunning = false;
+  cancelAnimationFrame(gameLoop);
+  clearInterval(spawnInterval);
+  clearInterval(timerInterval);
+
+  // Show ending
+  setTimeout(() => showEnding(), 500);
+}
+
+function showEnding() {
+  const screen = document.getElementById('ending-screen');
+  screen.style.display = 'flex';
+
+  // Title based on survival time
+  let title, subtitle, message;
+  if (elapsed < 10) {
+    title = '【海洋的初學者】';
+    subtitle = '生存時間：不足 10 秒';
+    message = '你甚至還沒看清楚世界的樣子，\n就被人類的便利奪走了生命。\n\n每一件你遭遇的垃圾，都需要數百年才能在自然中消失。';
+  } else if (elapsed < 30) {
+    title = '【堅強的倖存者】';
+    subtitle = `生存時間：${elapsed} 秒`;
+    message = '你努力躲避了無數垃圾，\n但這片海域已經不再適合居住。\n\n你的掙扎，讓我們看見了海洋生物的困境。';
+  } else {
+    title = '【海洋的鬥士】';
+    subtitle = `生存時間：${elapsed} 秒`;
+    message = '你的生命力令人驚嘆，\n但僅靠躲避無法拯救家園。\n\n是時候讓人類正視他們留下的傷痕。';
+  }
+
+  document.getElementById('ending-title').textContent = title;
+  document.getElementById('ending-subtitle').textContent = subtitle;
+  document.getElementById('ending-message').textContent = message;
+
+  // Trash stats
+  const statsEl = document.getElementById('trash-stats');
+  statsEl.innerHTML = '';
+  if (Object.keys(encounterLog).length === 0) {
+    statsEl.innerHTML = '<div style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;">奇蹟！你沒有碰到任何垃圾</div>';
+  } else {
+    for (const [name, data] of Object.entries(encounterLog)) {
+      const row = document.createElement('div');
+      row.className = 'trash-stat';
+      row.innerHTML = `<span>${data.emoji} ${name} × ${data.count}</span><span class="years">分解需 ${data.years} 年</span>`;
+      statsEl.appendChild(row);
+    }
+  }
+}
+
+function restartGame() {
+  document.getElementById('ending-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'flex';
+
+  // Clear all trash and seaweeds
+  document.querySelectorAll('.trash, .seaweed-item, .bg-fish, .float-text, .particle').forEach(el => el.remove());
+  trashItems = [];
+  seaweeds = [];
+
+  // Reset overlay
+  document.getElementById('level-overlay').style.background = 'transparent';
+  document.getElementById('level-overlay').style.backdropFilter = 'none';
+
+  // Reset player position
+  const player = document.getElementById('player');
+  player.style.left = (window.innerWidth / 2) + 'px';
+  player.style.top = (window.innerHeight / 2) + 'px';
+
+  drawOcean();
+  spawnBgFish();
+  for (let i = 0; i < 5; i++) spawnSeaweed();
+
+  hp = 100; score = 0; elapsed = 0; level = 1;
+  encounterLog = {};
+  updateHPBar();
+  updateScoreDisplay();
+  document.getElementById('timer-display').textContent = '00:00';
+  document.getElementById('level-display').textContent = 'LEVEL 1';
+  document.getElementById('score-display').textContent = '0';
+
+  gameRunning = true;
+  startSpawning();
+  startGameLoop();
+  startTimer();
+  showLevelAnnounce(levelData[0]);
+}
+
+// ====== BEACH CLEANUP ======
+let beachCleaned = 0;
+const BEACH_TOTAL = 20;
+
+function startBeachCleanup() {
+  document.getElementById('ending-screen').style.display = 'none';
+  const beachScreen = document.getElementById('beach-screen');
+  beachScreen.style.display = 'flex';
+  beachCleaned = 0;
+  spawnBeachTrash();
+}
+
+function spawnBeachTrash() {
+  const area = document.getElementById('beach-area');
+  // Clear existing
+  area.querySelectorAll('.beach-trash').forEach(el => el.remove());
+
+  const beachTrash = [
+    '🥤','🍶','🛍️','🥫','🧴','🪣','🥾','🍱','🧃','🍔','🧹','🧸','🧦','📱','🪟'
+  ];
+
+  for (let i = 0; i < BEACH_TOTAL; i++) {
+    const el = document.createElement('div');
+    el.className = 'beach-trash';
+    el.textContent = beachTrash[i % beachTrash.length];
+    el.style.left = (5 + Math.random() * 88) + '%';
+    el.style.top = (40 + Math.random() * 50) + '%';
+    el.style.animationDelay = (Math.random() * 2) + 's';
+    el.addEventListener('click', () => collectBeachTrash(el));
+    area.appendChild(el);
+  }
+
+  updateBeachProgress();
+}
+
+function collectBeachTrash(el) {
+  el.style.transform = 'scale(0) rotate(360deg)';
+  el.style.opacity = '0';
+  beachCleaned++;
+  updateBeachProgress();
+  setTimeout(() => el.remove(), 300);
+
+  if (beachCleaned >= BEACH_TOTAL) {
+    setTimeout(showCertificate, 800);
+  }
+}
+
+function updateBeachProgress() {
+  document.getElementById('beach-progress').textContent = `已清理：${beachCleaned} / ${BEACH_TOTAL}`;
+}
+
+function showCertificate() {
+  document.getElementById('beach-screen').style.display = 'none';
+  const cert = document.getElementById('certificate');
+  cert.style.display = 'flex';
+  const now = new Date();
+  document.getElementById('cert-date').textContent = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+}
+
+function closeCertificate() {
+  document.getElementById('certificate').style.display = 'none';
+  // Back to prologue
+  document.getElementById('prologue').style.display = 'flex';
+  document.getElementById('prologue').style.opacity = '1';
+  document.getElementById('game-screen').style.display = 'none';
+}
+
+// ====== INIT ======
+window.addEventListener('resize', () => {
+  if (gameRunning) drawOcean();
+});
+
+// Init player position
+const player = document.getElementById('player');
+player.style.left = (window.innerWidth / 2) + 'px';
+player.style.top = (window.innerHeight / 2) + 'px';
+</script>
+</body>
+</html>
