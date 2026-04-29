@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全球海洋塑膠污染地圖 · SDG 14</title>
+
+<!-- Leaflet.js CDN -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<!-- Google Fonts: editorial pairing -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  /* ─── DESIGN TOKENS ───────────────────────────────────── */
+  :root {
+    --bg:           #060d17;
+    --surface:      #0b1623;
+    --surface2:     #0f1e30;
+    --border:       #1a2d44;
+    --border-light: #243d59;
+    --text-primary: #d8e8f5;
+    --text-muted:   #6b8ba4;
+    --text-faint:   #3a5570;
+    --accent:       #00b4d8;
+    --accent-dim:   #0077a8;
+    --danger:       #e05c5c;
+    --warn:         #c89b3c;
+    --safe:         #3cb27a;
+
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-mono:    'IBM Plex Mono', 'Courier New', monospace;
+    --font-body:    'IBM Plex Sans', system-ui, sans-serif;
+
+    --sidebar-w:    380px;
+    --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* ─── RESET & BASE ────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    overflow: hidden;
+  }
+
+  /* ─── LAYOUT ──────────────────────────────────────────── */
+  #app {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    position: relative;
+  }
+
+  /* ─── HEADER ──────────────────────────────────────────── */
+  #header {
+    position: relative;
+    z-index: 1000;
+    background: linear-gradient(180deg, rgba(6,13,23,1) 60%, rgba(6,13,23,0) 100%);
+    padding: 18px 28px 32px;
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+    pointer-events: none;
+  }
+
+  .header-left { flex: 1; }
+
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .kicker::before {
+    content: '';
+    display: inline-block;
+    width: 18px; height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2.4vw, 30px);
+    font-weight: 900;
+    line-height: 1.15;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  .meta-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    pointer-events: all;
+  }
+  .pill {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border: 1px solid var(--border-light);
+    border-radius: 2px;
+    color: var(--text-muted);
+    background: rgba(15,30,48,0.7);
+  }
+
+  /* ─── MAP CONTAINER ───────────────────────────────────── */
+  #map-container {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  #map {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Leaflet override — dark attribution */
+  .leaflet-control-attribution {
+    background: rgba(6,13,23,0.85) !important;
+    color: var(--text-faint) !important;
+    font-family: var(--font-mono) !important;
+    font-size: 9px !important;
+    border-radius: 0 !important;
+  }
+  .leaflet-control-attribution a { color: var(--text-muted) !important; }
+  .leaflet-control-zoom a {
+    background: var(--surface2) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border) !important;
+  }
+  .leaflet-control-zoom a:hover {
+    background: var(--border) !important;
+  }
+
+  /* ─── CUSTOM TOOLTIP ──────────────────────────────────── */
+  .marker-tooltip {
+    background: rgba(6,13,23,0.92);
+    border: 1px solid var(--border-light);
+    border-radius: 2px;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 6px 10px;
+    white-space: nowrap;
+    backdrop-filter: blur(6px);
+    pointer-events: none;
+  }
+  .leaflet-tooltip-top::before { display: none; }
+
+  /* ─── SIDEBAR ─────────────────────────────────────────── */
+  #sidebar {
+    position: fixed;
+    top: 0; right: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    z-index: 2000;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.55s var(--ease-out);
+    overflow: hidden;
+  }
+
+  #sidebar.open {
+    transform: translateX(0);
+    box-shadow: -20px 0 80px rgba(0,0,0,0.6);
+  }
+
+  .sidebar-header {
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-shrink: 0;
+  }
+
+  .sidebar-kicker {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  #sidebar-country {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  #close-btn {
+    background: none;
+    border: 1px solid var(--border-light);
+    color: var(--text-muted);
+    width: 28px; height: 28px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: background 0.2s, color 0.2s;
+    line-height: 1;
+  }
+  #close-btn:hover { background: var(--border); color: var(--text-primary); }
+
+  .sidebar-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 0 24px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* ─── DATA SECTIONS ───────────────────────────────────── */
+  .data-section {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    animation: fadeIn 0.4s ease both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .data-section:nth-child(2) { animation-delay: 0.05s; }
+  .data-section:nth-child(3) { animation-delay: 0.1s; }
+  .data-section:nth-child(4) { animation-delay: 0.15s; }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+    letter-spacing: 0.01em;
+  }
+
+  /* Big stat */
+  .big-stat {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .big-number {
+    font-family: var(--font-display);
+    font-size: 42px;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--danger);
+    letter-spacing: -0.03em;
+  }
+  .big-unit {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+  }
+  .stat-val {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+
+  /* Bar chart */
+  .bar-container {
+    margin-top: 12px;
+  }
+  .bar-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+  .bar-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 1px;
+    transition: width 0.8s var(--ease-out);
+  }
+  .bar-fill.danger { background: var(--danger); }
+  .bar-fill.warn   { background: var(--warn); }
+  .bar-fill.safe   { background: var(--safe); }
+
+  /* Probability gauge */
+  .prob-number {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .prob-number.high { color: var(--danger); }
+  .prob-number.mid  { color: var(--warn); }
+  .prob-number.low  { color: var(--safe); }
+
+  .explanation {
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-top: 10px;
+    border-left: 2px solid var(--border-light);
+    padding-left: 12px;
+  }
+
+  /* Per capita inline bar */
+  .percap-number {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--warn);
+    margin-bottom: 6px;
+  }
+
+  /* ─── LEGEND ──────────────────────────────────────────── */
+  #legend {
+    position: fixed;
+    bottom: 28px;
+    left: 24px;
+    z-index: 1500;
+    background: rgba(11,22,35,0.9);
+    border: 1px solid var(--border);
+    padding: 14px 18px;
+    backdrop-filter: blur(8px);
+    max-width: 220px;
+  }
+
+  .legend-title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    border-radius: 2px;
+  }
+
+  .legend-text {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── COUNTER ─────────────────────────────────────────── */
+  #counter {
+    position: fixed;
+    bottom: 28px;
+    right: 24px;
+    z-index: 1500;
+    text-align: right;
+  }
+
+  .counter-num {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--danger);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .counter-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* ─── RESPONSIVE ──────────────────────────────────────── */
+  @media (max-width: 640px) {
+    :root { --sidebar-w: 100vw; }
+    #header { padding: 14px 16px 28px; }
+    h1 { font-size: 20px; }
+    #legend { left: 12px; bottom: 16px; }
+    #counter { right: 12px; bottom: 16px; }
+  }
+</style>
+</head>
+
+<body>
+<div id="app">
+
+  <!-- MAP (full screen) -->
+  <div id="map-container">
+    <div id="map"></div>
+  </div>
+
+  <!-- HEADER (floats above map) -->
+  <header id="header">
+    <div class="header-left">
+      <div class="kicker">SDG 14 · 海洋生態保護</div>
+      <h1>全球海洋塑膠<br>污染溯源地圖</h1>
+      <p class="subtitle">資料來源：Meijer et al. (2021) · Science · 陸源排放估算</p>
+      <div class="meta-pills">
+        <span class="pill">Annual Estimate</span>
+        <span class="pill">Mismanaged Plastic</span>
+        <span class="pill">N = 5 Countries</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" role="complementary" aria-label="國家詳細資料">
+    <div class="sidebar-header">
+      <div>
+        <div class="sidebar-kicker">Country Profile</div>
+        <div id="sidebar-country">—</div>
+      </div>
+      <button id="close-btn" aria-label="關閉" title="關閉">✕</button>
+    </div>
+
+    <div class="sidebar-body" id="sidebar-body">
+      <!-- injected by JS -->
+    </div>
+  </aside>
+
+  <!-- LEGEND -->
+  <div id="legend" aria-label="圖例">
+    <div class="legend-title">全球排放佔比</div>
+    <div class="legend-items">
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#b22222;"></div>
+        <span class="legend-text">&gt; 10%（極嚴重）</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#c0522a;"></div>
+        <span class="legend-text">1–10%（嚴重）</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#8b6914;"></div>
+        <span class="legend-text">0.1–1%（中等）</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#2a5a4a;"></div>
+        <span class="legend-text">&lt; 0.1%（輕微）</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#1a2d3e;border:1px solid #243d59;"></div>
+        <span class="legend-text">無資料</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE COUNTER -->
+  <div id="counter">
+    <div class="counter-num" id="counter-num">0</div>
+    <div class="counter-label">公噸塑膠 · 本年度至今</div>
+  </div>
+
+</div><!-- #app -->
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+window.addEventListener('load', function () {
+
+/* ═══════════════════════════════════════════════════════
+   DATA  —  Meijer et al. (2021)
+   Key: ISO 3166-1 alpha-3 codes for GeoJSON matching
+═══════════════════════════════════════════════════════ */
+const countriesData = {
+  'PHL': {
+    countryName: '菲律賓', countryNameEn: 'Philippines',
+    emittedTons: 356_371, globalShare: 36.38, probability: 47.1, perCapita: 3.30,
+    note: '由眾多島嶼與密集的沿岸人口構成，塑膠廢棄物難以集中管理，河流網絡直接將廢料帶入西太平洋。'
+  },
+  'IND': {
+    countryName: '印度', countryNameEn: 'India',
+    emittedTons: 126_513, globalShare: 12.91, probability: 12.4, perCapita: 0.09,
+    note: '龐大的人口基數與廢棄物處理基礎設施不均，是印度洋污染的重要陸源，恆河等主要河流是主要輸送路徑。'
+  },
+  'MYS': {
+    countryName: '馬來西亞', countryNameEn: 'Malaysia',
+    emittedTons: 73_098, globalShare: 7.46, probability: 26.7, perCapita: 2.21,
+    note: '半島與婆羅洲的地形使得廢棄物迅速匯入南海。高城市化率伴隨快速成長的塑膠消費，回收基礎設施仍滯後。'
+  },
+  'CHN': {
+    countryName: '中國', countryNameEn: 'China',
+    emittedTons: 70_811, globalShare: 7.22, probability: 8.9, perCapita: 0.05,
+    note: '作為全球最大生產國，雖然近年回收政策顯著改善，但廣大沿岸城市與密集的河流系統仍帶來持續的排放壓力。'
+  },
+  'USA': {
+    countryName: '美國', countryNameEn: 'United States',
+    emittedTons: 42_030, globalShare: 4.29, probability: 2.1, perCapita: 0.13,
+    note: '雖然廢棄物管理體系較健全，但龐大的塑膠消費總量仍形成可觀的絕對排放；非正式廢棄物出口亦是隱藏因素。'
+  }
+};
+
+/* ═══════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════ */
+function fmtNum(n) { return n.toLocaleString('zh-TW'); }
+
+function choroplethColor(share) {
+  if (share === null) return '#1a2d3e';   // no data
+  if (share > 10)    return '#b22222';   // extreme  — deep crimson
+  if (share > 1)     return '#c0522a';   // severe   — burnt orange
+  if (share > 0.1)   return '#8b6914';   // moderate — dark amber
+  return '#2a5a4a';                      // low      — deep teal
+}
+
+function probClass(p) {
+  if (p > 30) return 'high';
+  if (p > 15) return 'mid';
+  return 'low';
+}
+function barColor(p) {
+  if (p > 30) return 'danger';
+  if (p > 15) return 'warn';
+  return 'safe';
+}
+
+/* ═══════════════════════════════════════════════════════
+   MAP INIT
+═══════════════════════════════════════════════════════ */
+const map = L.map('map', {
+  center: [15, 10],
+  zoom: 2,
+  minZoom: 2,
+  zoomControl: true,
+  attributionControl: true,
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+  subdomains: 'abcd',
+  maxZoom: 19,
+}).addTo(map);
+
+/* ═══════════════════════════════════════════════════════
+   SIDEBAR LOGIC  (defined before GeoJSON so click handler can call it)
+═══════════════════════════════════════════════════════ */
+const sidebar        = document.getElementById('sidebar');
+const sidebarCountry = document.getElementById('sidebar-country');
+const sidebarBody    = document.getElementById('sidebar-body');
+const closeBtn       = document.getElementById('close-btn');
+
+function openSidebar(d) {
+  sidebarCountry.textContent = d.countryName;
+
+  const pClass    = probClass(d.probability);
+  const pBarColor = barColor(d.probability);
+  const shareBar  = Math.min(d.globalShare / 40 * 100, 100);
+  const capBar    = Math.min(d.perCapita / 5 * 100, 100);
+
+  sidebarBody.innerHTML = `
+    <div class="data-section">
+      <div class="section-label">第一層 · Layer 1</div>
+      <div class="section-title">污染衝擊</div>
+      <div class="big-stat">
+        <span class="big-number">${fmtNum(d.emittedTons)}</span>
+        <span class="big-unit">公噸／年</span>
+      </div>
+      <p style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:.04em;">陸源塑膠年排海量估算值</p>
+      <div class="bar-container" style="margin-top:14px">
+        <div class="bar-label-row">
+          <span>全球排放份額</span>
+          <span style="color:var(--danger)">${d.globalShare.toFixed(2)} %</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill danger" style="width:0%" data-target="${shareBar}%"></div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">佔全球陸源塑膠排放</span>
+        <span class="stat-val">${d.globalShare.toFixed(2)} %</span>
+      </div>
+    </div>
+
+    <div class="data-section">
+      <div class="section-label">第二層 · Layer 2</div>
+      <div class="section-title">地理歸因</div>
+      <div class="prob-number ${pClass}">${d.probability.toFixed(1)} %</div>
+      <div class="bar-container" style="margin-top:8px">
+        <div class="bar-track">
+          <div class="bar-fill ${pBarColor}" style="width:0%" data-target="${d.probability}%"></div>
+        </div>
+      </div>
+      <p class="explanation">
+        管理不善塑膠最終入海的機率估算。受地形坡度、河流密度與沿岸距離影響——
+        ${d.countryName}面臨${pClass === 'high' ? '極高' : pClass === 'mid' ? '中等' : '相對較低'}的入海風險。
+        <br><br>${d.note}
+      </p>
+    </div>
+
+    <div class="data-section">
+      <div class="section-label">第三層 · Layer 3</div>
+      <div class="section-title">系統歸因</div>
+      <div class="percap-number">${d.perCapita.toFixed(2)} <span style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted)">公斤 / 人 / 年</span></div>
+      <div class="bar-container" style="margin-top:10px">
+        <div class="bar-label-row">
+          <span>相對強度（5 kg 為高閾值）</span>
+          <span style="color:var(--warn)">${d.perCapita.toFixed(2)} kg</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill warn" style="width:0%" data-target="${capBar}%"></div>
+        </div>
+      </div>
+      <p class="explanation" style="margin-top:12px">
+        每人每年產生的管理不善塑膠量，反映廢棄物收集體系、回收基礎設施的整體效率。數值越高，意味著系統性失能越嚴重。
+      </p>
+    </div>
+
+    <div style="padding:16px 24px;">
+      <p style="font-family:var(--font-mono);font-size:9.5px;color:var(--text-faint);line-height:1.7;letter-spacing:.03em;">
+        資料來源：Meijer, L.J.J. et al. (2021). <em>More than 1000 rivers account for 80% of global riverine plastic emissions into the ocean.</em> Science Advances, 7(18).
+      </p>
+    </div>
+  `;
+
+  sidebar.classList.add('open');
+  sidebar.setAttribute('aria-hidden', 'false');
+
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      sidebarBody.querySelectorAll('.bar-fill').forEach(el => {
+        el.style.width = el.dataset.target;
+      });
+    }, 80);
+  });
+}
+
+function closeSidebar() {
+  sidebar.classList.remove('open');
+  sidebar.setAttribute('aria-hidden', 'true');
+}
+
+closeBtn.addEventListener('click', closeSidebar);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+
+/* ═══════════════════════════════════════════════════════
+   GEOJSON CHOROPLETH
+   Source: Natural Earth via CDN (low-res, fast)
+═══════════════════════════════════════════════════════ */
+let geojsonLayer = null;
+let activeLayer  = null;
+
+const DEFAULT_STYLE = {
+  weight: 0.5,
+  color: '#0d1f2f',
+  opacity: 1,
+  fillOpacity: 0.82,
+};
+
+function styleFeature(feature) {
+  const iso  = feature.properties.ISO_A3 || feature.properties.iso_a3 || '';
+  const d    = countriesData[iso];
+  const fill = d ? choroplethColor(d.globalShare) : choroplethColor(null);
+  return { ...DEFAULT_STYLE, fillColor: fill };
+}
+
+function highlightFeature(e) {
+  const layer = e.target;
+  const iso   = layer.feature.properties.ISO_A3 || layer.feature.properties.iso_a3 || '';
+  if (!countriesData[iso]) return;
+  layer.setStyle({ weight: 2, color: '#a0c8e8', fillOpacity: 1 });
+  layer.bringToFront();
+}
+
+function resetHighlight(e) {
+  if (geojsonLayer) geojsonLayer.resetStyle(e.target);
+  if (activeLayer) {
+    activeLayer.setStyle({ weight: 2, color: '#a0c8e8', fillOpacity: 1 });
+  }
+}
+
+function onFeatureClick(e) {
+  L.DomEvent.stopPropagation(e);
+  const layer = e.target;
+  const iso   = layer.feature.properties.ISO_A3 || layer.feature.properties.iso_a3 || '';
+  const d     = countriesData[iso];
+  if (!d) return;
+
+  // Reset previous active
+  if (activeLayer && geojsonLayer) geojsonLayer.resetStyle(activeLayer);
+  activeLayer = layer;
+  layer.setStyle({ weight: 2.5, color: '#ffffff', fillOpacity: 1 });
+  layer.bringToFront();
+
+  openSidebar(d);
+}
+
+function onEachFeature(feature, layer) {
+  const iso = feature.properties.ISO_A3 || feature.properties.iso_a3 || '';
+  const d   = countriesData[iso];
+  if (!d) return;
+
+  // Tooltip
+  layer.bindTooltip(`
+    <div class="marker-tooltip">
+      <strong style="color:#d8e8f5">${d.countryName}</strong><br>
+      <span style="color:#6b8ba4;font-size:10px">${fmtNum(d.emittedTons)} 公噸／年 · ${d.globalShare.toFixed(2)}%</span>
+    </div>
+  `, { sticky: true, className: '' });
+
+  layer.on({
+    mouseover: highlightFeature,
+    mouseout:  resetHighlight,
+    click:     onFeatureClick,
+  });
+
+  // Pointer cursor on data countries
+  layer.on('mouseover', () => { document.body.style.cursor = 'pointer'; });
+  layer.on('mouseout',  () => { document.body.style.cursor = ''; });
+}
+
+// Fetch GeoJSON from a reliable CDN
+fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+  .then(r => r.json())
+  .then(data => {
+    geojsonLayer = L.geoJSON(data, {
+      style: styleFeature,
+      onEachFeature: onEachFeature,
+    }).addTo(map);
+  })
+  .catch(() => {
+    // Fallback: try alternative CDN
+    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+      .then(r => r.json())
+      .then(data => {
+        // world-atlas uses topojson — inform user gracefully
+        console.warn('GeoJSON fallback: topojson format not supported without topojson lib');
+      });
+  });
+
+// Clicking empty map area closes sidebar
+map.on('click', () => {
+  if (activeLayer && geojsonLayer) {
+    geojsonLayer.resetStyle(activeLayer);
+    activeLayer = null;
+  }
+  closeSidebar();
+});
+
+/* ═══════════════════════════════════════════════════════
+   LIVE COUNTER
+═══════════════════════════════════════════════════════ */
+const totalAnnual = Object.values(countriesData).reduce((a, c) => a + c.emittedTons, 0);
+const tonPerMs    = totalAnnual / (365.25 * 24 * 3600 * 1000);
+const yearStart   = new Date(new Date().getFullYear(), 0, 1).getTime();
+const counterEl   = document.getElementById('counter-num');
+
+function updateCounter() {
+  const tons = Math.floor((Date.now() - yearStart) * tonPerMs);
+  counterEl.textContent = fmtNum(tons);
+  requestAnimationFrame(updateCounter);
+}
+updateCounter();
+
+}); // end load
+</script>
+</body>
+</html>
