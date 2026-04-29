@@ -1,0 +1,204 @@
+/* ═══════════════════════════════════════════════════════
+   shared.css — SDG 14 Ocean Plastic Project
+   共用設計系統：所有頁面引入此檔案
+═══════════════════════════════════════════════════════ */
+
+/* ─── DESIGN TOKENS ───────────────────────────────────── */
+:root {
+  --bg:           #060d17;
+  --surface:      #0b1623;
+  --surface2:     #0f1e30;
+  --border:       #1a2d44;
+  --border-light: #243d59;
+  --text-primary: #d8e8f5;
+  --text-muted:   #6b8ba4;
+  --text-faint:   #3a5570;
+  --accent:       #00b4d8;
+  --accent-dim:   #0077a8;
+  --danger:       #e05c5c;
+  --warn:         #c89b3c;
+  --safe:         #3cb27a;
+
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-mono:    'IBM Plex Mono', 'Courier New', monospace;
+  --font-body:    'IBM Plex Sans', system-ui, sans-serif;
+}
+
+/* ─── RESET ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ─── NAV ─────────────────────────────────────────────── */
+#site-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 9000;
+  height: 48px;
+  background: rgba(6, 13, 23, 0.92);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 0;
+}
+
+.nav-brand {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-decoration: none;
+  margin-right: 32px;
+  white-space: nowrap;
+}
+
+.nav-links {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 2px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.nav-links a:hover {
+  color: var(--text-primary);
+  background: var(--surface2);
+}
+
+.nav-links a.active {
+  color: var(--text-primary);
+  background: var(--border);
+}
+
+.nav-spacer { flex: 1; }
+
+.nav-sdg-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 2px;
+}
+/* ═══════════════════════════════════════════════════════
+   shared.css — SDG 14 Ocean Plastic Project
+   共用設計系統：所有頁面引入此檔案
+═══════════════════════════════════════════════════════ */
+
+/* ─── DESIGN TOKENS ───────────────────────────────────── */
+:root {
+  --bg:           #060d17;
+  --surface:      #0b1623;
+  --surface2:     #0f1e30;
+  --border:       #1a2d44;
+  --border-light: #243d59;
+  --text-primary: #d8e8f5;
+  --text-muted:   #6b8ba4;
+  --text-faint:   #3a5570;
+  --accent:       #00b4d8;
+  --accent-dim:   #0077a8;
+  --danger:       #e05c5c;
+  --warn:         #c89b3c;
+  --safe:         #3cb27a;
+
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-mono:    'IBM Plex Mono', 'Courier New', monospace;
+  --font-body:    'IBM Plex Sans', system-ui, sans-serif;
+}
+
+/* ─── RESET ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ─── NAV ─────────────────────────────────────────────── */
+#site-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 9000;
+  height: 48px;
+  background: rgba(6, 13, 23, 0.92);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 0;
+}
+
+.nav-brand {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-decoration: none;
+  margin-right: 32px;
+  white-space: nowrap;
+}
+
+.nav-links {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 2px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.nav-links a:hover {
+  color: var(--text-primary);
+  background: var(--surface2);
+}
+
+.nav-links a.active {
+  color: var(--text-primary);
+  background: var(--border);
+}
+
+.nav-spacer { flex: 1; }
+
+.nav-sdg-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 2px;
+}
