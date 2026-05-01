@@ -26,24 +26,48 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
-      background: var(--deep);
+      /* 使用您指定的顏色，這會讓背景隨著整頁高度做漸層 */
+      background: linear-gradient(
+        to bottom,
+        #026d82 0%,
+        #003d4f 35%,
+        #003847 60%,
+        #001219 85%,
+        #001219 100%
+      );
+      background-attachment: scroll; /* 確保漸層跟著頁面捲動 */
       color: var(--text);
       font-family: 'Noto Sans TC', sans-serif;
       font-weight: 300;
       overflow-x: hidden;
+      min-height: 100vh;
     }
 
     /* ===== NAVBAR ===== */
     #navbar {
-      position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      z-index: 1000;
       padding: 18px 40px;
-      display: flex; align-items: center; justify-content: space-between;
-      transition: background 0.5s, backdrop-filter 0.5s, box-shadow 0.5s;
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between;
+      /* 移除背景色，讓 body 漸層透出來 */
+      background: transparent; 
+      /* 增加平滑過渡 */
+      transition: all 0.5s ease;
     }
+
+    /* 當頁面捲動後，加入毛玻璃效果而非純色背景 */
     #navbar.scrolled {
-      background: rgba(0,18,25,0.92);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 2px 24px rgba(0,0,0,0.5);
+      /* 使用極低透明度的深色，並搭配高模糊度 */
+      background: rgba(0, 18, 25, 0.2); 
+      backdrop-filter: blur(12px); 
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid rgba(148, 210, 189, 0.1);
     }
     .nav-logo {
       font-family: 'Playfair Display', serif;
@@ -73,7 +97,7 @@
     }
     .hero-bg {
       position: absolute; inset: 0;
-      background: linear-gradient(160deg, #001219 0%, #003d4f 40%, #005F73 70%, #001219 100%);
+      background: transparent;
       background-size: 300% 300%;
       animation: oceanFlow 12s ease-in-out infinite;
     }
@@ -118,8 +142,8 @@
     }
 
     /* Mouse parallax glow */
-    #hero-glow {
-      position: absolute; inset: 0; pointer-events: none;
+    #global-glow {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
       background: radial-gradient(circle 400px at 50% 50%, rgba(148,210,189,0.1) 0%, transparent 70%);
       transition: background 0.1s;
     }
@@ -159,7 +183,7 @@
       display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
     }
     .btn-primary {
-      padding: 14px 34px; border-radius: 2px;
+      padding: 14px 34px; border-radius: 5px;
       background: var(--mint); color: var(--deep);
       font-family: 'Noto Sans TC', sans-serif; font-weight: 500;
       font-size: 0.88rem; letter-spacing: 0.06em;
@@ -221,7 +245,7 @@
     .container { max-width: 1200px; margin: 0 auto; }
 
     /* ===== SDG CARDS ===== */
-    #issues { background: linear-gradient(180deg, var(--deep) 0%, #00222d 100%); }
+    #issues { background: transparent; }
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -302,14 +326,15 @@
 
     /* ===== COUNTER SECTION ===== */
     #counter-section {
-      background: linear-gradient(135deg, #002b38 0%, #001a22 100%);
+      background: transparent;
       position: relative; overflow: hidden;
       text-align: center;
     }
     #counter-section::before {
+      /* 保留原本的光暈效果，但將底色設為透明 */
       content: '';
       position: absolute; inset: 0;
-      background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,95,115,0.2), transparent 70%);
+      background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,95,115,0.1), transparent 70%);
     }
     .counter-box { position: relative; z-index: 2; }
     .counter-eyebrow { font-size: 0.75rem; letter-spacing: 0.25em; color: var(--warn); text-transform: uppercase; margin-bottom: 16px; }
@@ -333,14 +358,14 @@
     .map-teaser p em { color: var(--mint); font-style: normal; }
 
     /* ===== ACTIONS ===== */
-    #actions { background: var(--deep); }
+    #actions { background: transparent; }
     .actions-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 24px; margin-top: 48px;
     }
     .action-item {
       padding: 32px 28px;
-      border: 1px solid rgba(148,210,189,0.15); border-radius: 4px;
+      border: 1px solid rgba(148,210,189,0.15); border-radius: 10px;
       background: rgba(0,95,115,0.06);
       transition: border-color 0.3s, transform 0.3s, background 0.3s;
     }
@@ -358,8 +383,8 @@
     .action-game-note { font-size: 0.75rem; color: var(--mint); margin-top: 10px; font-style: italic; }
     .cta-banner {
       margin-top: 60px; padding: 40px;
-      background: linear-gradient(135deg, rgba(0,95,115,0.3), rgba(0,18,25,0.5));
-      border: 1px solid rgba(148,210,189,0.2); border-radius: 4px;
+      background: rgba(0,95,115,0.06);
+      border: 1px solid rgba(148,210,189,0.2); border-radius: 6px;
       text-align: center;
     }
     .cta-banner p {
@@ -370,7 +395,7 @@
 
     /* ===== FOOTER ===== */
     footer {
-      background: #00090d;
+      background: rgba(0, 9, 13, 0.5); /* 讓 footer 帶點半透明，融合背景 */
       padding: 60px 40px 32px;
       border-top: 1px solid rgba(148,210,189,0.12);
     }
@@ -419,6 +444,7 @@
 <body>
 
   <!-- NAVBAR -->
+  <div id="global-glow"></div>
   <nav id="navbar">
     <span class="nav-logo">404 : Ocean Not Found</span>
     <ul class="nav-links">
@@ -431,7 +457,7 @@
   <!-- HERO -->
   <section id="hero">
     <div class="hero-bg"></div>
-    <div id="hero-glow"></div>
+    
     <div class="bubbles">
       <div class="bubble"></div><div class="bubble"></div>
       <div class="bubble"></div><div class="bubble"></div>
@@ -606,7 +632,7 @@
         <p>對現況感到懷疑？前往 <a href="map.html">【地圖頁】</a> 查看各國真實數據。<br>
         想親身體驗海洋生物的困境嗎？</p>
         <div class="cta-banner-btns">
-          <a href="claude/index.html" class="btn-primary">🌊 進入深海遊戲</a>
+          <a href="claude/index.html" class="btn-primary">進入深海遊戲</a>
           <!-- <a href="map.html" class="btn-outline">🗺️ 查看全球地圖</a> -->
         </div>
       </div>
@@ -660,11 +686,15 @@
     });
 
     // ===== Mouse parallax glow =====
-    const heroGlow = document.getElementById('hero-glow');
-    document.getElementById('hero').addEventListener('mousemove', (e) => {
+    // 修改滑鼠跟隨邏輯
+    const globalGlow = document.getElementById('global-glow');
+
+    document.addEventListener('mousemove', (e) => {
+      // 使用 e.clientX 和 e.clientY 取得相對於瀏覽器視窗的位置
       const x = (e.clientX / window.innerWidth) * 100;
       const y = (e.clientY / window.innerHeight) * 100;
-      heroGlow.style.background = `radial-gradient(circle 500px at ${x}% ${y}%, rgba(148,210,189,0.12) 0%, transparent 70%)`;
+      
+      globalGlow.style.background = `radial-gradient(circle 500px at ${x}% ${y}%, rgba(148,210,189,0.12) 0%, transparent 70%)`;
     });
 
     // ===== Typewriter =====
