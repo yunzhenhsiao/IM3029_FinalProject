@@ -521,9 +521,139 @@
     50% { transform: rotate(5deg); }
   }
 
+  /* ====== BEACH LIFE ANIMATIONS ====== */
+
+  /* Fish school in sea zone */
+  .beach-fish {
+    position: absolute;
+    font-size: 20px;
+    pointer-events: none;
+    opacity: 0.85;
+    animation: fishSwimBeach linear infinite;
+  }
+
+  @keyframes fishSwimBeach {
+    0%   { transform: translateX(0) translateY(0) scaleX(1); }
+    48%  { transform: translateX(var(--swim-dist)) translateY(var(--swim-dy)) scaleX(1); }
+    50%  { transform: translateX(var(--swim-dist)) translateY(var(--swim-dy)) scaleX(-1); }
+    98%  { transform: translateX(0) translateY(0) scaleX(-1); }
+    100% { transform: translateX(0) translateY(0) scaleX(1); }
+  }
+
+  /* Turtle being poked by straw */
+  .beach-turtle-wrap {
+    position: absolute;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .beach-turtle {
+    font-size: 38px;
+    animation: turtleWobble 0.5s ease-in-out infinite alternate;
+    filter: drop-shadow(0 3px 4px rgba(0,0,0,0.25));
+  }
+
+  @keyframes turtleWobble {
+    from { transform: rotate(-6deg) translateY(0); }
+    to   { transform: rotate(6deg) translateY(-4px); }
+  }
+
+  .beach-straw {
+    position: absolute;
+    font-size: 22px;
+    animation: strawPoke 0.9s ease-in-out infinite alternate;
+    transform-origin: bottom center;
+  }
+
+  @keyframes strawPoke {
+    from { transform: rotate(-30deg) translate(8px, -10px); }
+    to   { transform: rotate(-10deg) translate(2px, -2px); }
+  }
+
+  .turtle-cry {
+    font-size: 13px;
+    color: #c0392b;
+    font-weight: 700;
+    animation: crySway 1s ease-in-out infinite alternate;
+    white-space: nowrap;
+    margin-top: 2px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  @keyframes crySway {
+    from { opacity: 0.6; transform: translateX(-3px); }
+    to   { opacity: 1;   transform: translateX(3px); }
+  }
+
+  /* Beachgoers walking */
+  .beachgoer {
+    position: absolute;
+    font-size: 32px;
+    pointer-events: none;
+    animation: walkerMove linear infinite;
+    filter: drop-shadow(1px 3px 3px rgba(0,0,0,0.2));
+  }
+
+  @keyframes walkerMove {
+    0%   { transform: translateX(0) scaleX(1); }
+    49%  { transform: translateX(var(--walk-dist)) scaleX(1); }
+    50%  { transform: translateX(var(--walk-dist)) scaleX(-1); }
+    99%  { transform: translateX(0) scaleX(-1); }
+    100% { transform: translateX(0) scaleX(1); }
+  }
+
+  /* Seagulls */
+  .beach-gull {
+    position: absolute;
+    font-size: 22px;
+    pointer-events: none;
+    animation: gullFly linear infinite;
+    opacity: 0.9;
+  }
+
+  @keyframes gullFly {
+    0%   { transform: translateX(-120px) translateY(0); }
+    50%  { transform: translateX(var(--gull-dist)) translateY(var(--gull-dy)); }
+    100% { transform: translateX(calc(var(--gull-dist) + 120px)) translateY(0); }
+  }
+
+  /* Sun */
+  .beach-sun {
+    position: absolute;
+    font-size: 52px;
+    top: 1%;
+    right: 1%;
+    pointer-events: none;
+    animation: sunPulse 4s ease-in-out infinite;
+    filter: drop-shadow(0 0 18px rgba(255,220,0,0.6));
+  }
+
+  @keyframes sunPulse {
+    0%,100% { transform: scale(1); }
+    50%      { transform: scale(1.08); }
+  }
+
+  /* Waves at sea/sand boundary */
+  .beach-wave {
+    position: absolute;
+    left: 0; right: 0;
+    font-size: 28px;
+    letter-spacing: -4px;
+    pointer-events: none;
+    animation: wavePush 2.5s ease-in-out infinite;
+    opacity: 0.6;
+  }
+
+  @keyframes wavePush {
+    0%,100% { transform: translateX(0); opacity: 0.5; }
+    50%      { transform: translateX(12px); opacity: 0.8; }
+  }
+
   #beach-progress {
     position: absolute;
-    top: 15px; right: 20px;
+    top: 15px; left: 20px;
     background: rgba(255,255,255,0.8);
     padding: 10px 18px;
     border-radius: 20px;
@@ -1278,11 +1408,11 @@ function startGameLoop() {
 function applyLevelEffects(lv) {
   const overlay = document.getElementById('level-overlay');
   if (lv === 2) {
-    overlay.style.background = 'rgba(0,0,30,0.4)';
-    overlay.style.backdropFilter = 'brightness(0.6)';
+    overlay.style.background = 'rgba(0,0,20,0.12)';
+    overlay.style.backdropFilter = 'none';
   } else if (lv === 3) {
-    overlay.style.background = 'rgba(20,0,0,0.5)';
-    overlay.style.backdropFilter = 'brightness(0.4) saturate(0.5)';
+    overlay.style.background = 'rgba(30,0,0,0.18)';
+    overlay.style.backdropFilter = 'none';
   }
 }
 
@@ -1482,6 +1612,7 @@ function startBeachCleanup() {
   beachCleaned = 0;
   pendingBeachEl = null;
   spawnBeachTrash();
+  spawnBeachLife();
 }
 
 function spawnBeachTrash() {
@@ -1527,6 +1658,70 @@ function closeBeachPopup() {
       setTimeout(showCertificate, 700);
     }
   }
+}
+
+function spawnBeachLife() {
+  const area = document.getElementById('beach-area');
+  // Clear previous life
+  area.querySelectorAll('.beach-life').forEach(el => el.remove());
+
+  // ── Sun ──
+  const sun = document.createElement('div');
+  sun.className = 'beach-sun beach-life';
+  sun.textContent = '☀️';
+  area.appendChild(sun);
+
+  // ── Fish schools (in sea, top 0-46%) ──
+  const fishEmojis = ['🐠','🐟','🐡','🐬','🦈'];
+  const fishGroups = [
+    { emojis: ['🐠','🐠','🐟'], top: 12, left: 8,  dist: 320, dy: 18,  dur: 7  },
+    { emojis: ['🐟','🐟','🐟','🐠'], top: 22, left: 55, dist: -260, dy: -12, dur: 9  },
+    { emojis: ['🐡','🐡'],           top: 35, left: 20, dist: 200,  dy: 8,   dur: 11 },
+    { emojis: ['🐬'],                top: 8,  left: 40, dist: 280,  dy: -20, dur: 8  },
+    { emojis: ['🦈'],                top: 30, left: 70, dist: -180, dy: 10,  dur: 13 },
+  ];
+
+  fishGroups.forEach(group => {
+    group.emojis.forEach((emoji, i) => {
+      const f = document.createElement('div');
+      f.className = 'beach-fish beach-life';
+      f.textContent = emoji;
+      f.style.top = (group.top + i * 3.5) + '%';
+      f.style.left = (group.left + i * 4) + '%';
+      f.style.setProperty('--swim-dist', group.dist + 'px');
+      f.style.setProperty('--swim-dy', group.dy + 'px');
+      f.style.animationDuration = (group.dur + i * 0.6) + 's';
+      f.style.animationDelay = (i * 0.4) + 's';
+      f.style.fontSize = (16 + Math.random() * 10) + 'px';
+      area.appendChild(f);
+    });
+  });
+
+  // ── Turtle being poked by straw (in sea) ──
+  const turtleWrap = document.createElement('div');
+  turtleWrap.className = 'beach-turtle-wrap beach-life';
+  turtleWrap.style.top = '26%';
+  turtleWrap.style.left = '62%';
+
+  const turtle = document.createElement('div');
+  turtle.className = 'beach-turtle';
+  turtle.textContent = '🐢';
+
+  const straw = document.createElement('div');
+  straw.className = 'beach-straw';
+  straw.textContent = '🥤';
+  straw.style.top = '-18px';
+  straw.style.left = '30px';
+
+  const cry = document.createElement('div');
+  cry.className = 'turtle-cry';
+  cry.textContent = '😢 救命！';
+
+  turtleWrap.appendChild(straw);
+  turtleWrap.appendChild(turtle);
+  turtleWrap.appendChild(cry);
+  area.appendChild(turtleWrap);
+
 }
 
 function updateBeachProgress() {

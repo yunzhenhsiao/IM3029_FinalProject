@@ -143,6 +143,13 @@
     backdrop-filter: blur(6px);
     pointer-events: none;
   }
+  .leaflet-tooltip {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
   .leaflet-tooltip::before { display: none; }
 
   /* ─── SIDEBAR ─────────────────────────────────────────── */
@@ -328,15 +335,65 @@
     margin-top: 8px;
   }
 
+  /* ─── MODE TOGGLE ─────────────────────────────────────── */
+  #mode-toggle {
+    position: fixed;
+    bottom: 28px; left: 24px;
+    z-index: 1500;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .mode-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 2px;
+  }
+
+  .mode-btns {
+    display: flex;
+    gap: 6px;
+  }
+
+  .mode-btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 6px 12px;
+    border-radius: 2px;
+    border: 1px solid var(--border-light);
+    background: rgba(11,22,35,0.92);
+    color: var(--text-muted);
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+  }
+  .mode-btn:hover {
+    background: var(--surface2);
+    color: var(--text-primary);
+  }
+  .mode-btn.active {
+    background: var(--surface2);
+    color: var(--text-primary);
+    border-color: var(--accent);
+  }
+
   /* ─── LEGEND ──────────────────────────────────────────── */
   #legend {
     position: fixed;
-    bottom: 28px; left: 24px;
+    bottom: 84px; left: 24px;
     z-index: 1500;
     background: rgba(11,22,35,0.92);
     border: 1px solid var(--border);
     padding: 14px 18px;
     backdrop-filter: blur(8px);
+    min-width: 190px;
   }
   .legend-title {
     font-family: var(--font-mono);
@@ -358,13 +415,25 @@
     z-index: 1500;
     text-align: right;
   }
-  .counter-num   { font-family: var(--font-display); font-size: 28px; font-weight: 900; color: var(--danger); letter-spacing: -0.03em; line-height: 1; }
+  .counter-num   { font-family: var(--font-display); font-size: 28px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.03em; line-height: 1; }
   .counter-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); margin-top: 2px; }
+
+  /* ─── SIDEBAR FONT IMPROVEMENTS ───────────────────────── */
+  .section-title { font-size: 15px !important; color: #e8f4ff !important; }
+  .section-label { color: var(--accent) !important; }
+  .big-number    { font-size: 44px !important; }
+  .big-unit      { font-size: 13px !important; color: #a0bdd4 !important; }
+  .stat-label    { font-size: 11px !important; color: #a0bdd4 !important; }
+  .stat-val      { font-size: 14px !important; }
+  .bar-label-row { font-size: 11px !important; color: #a0bdd4 !important; }
+  .explanation   { font-size: 13px !important; color: #a0bdd4 !important; line-height: 1.7 !important; }
+  .no-data-note  { font-size: 11px !important; color: var(--text-muted) !important; }
 
   @media (max-width: 640px) {
     :root { --sidebar-w: 100vw; }
     #header { padding: 14px 16px 28px; }
-    #legend { left: 12px; bottom: 16px; }
+    #mode-toggle { left: 12px; bottom: 16px; }
+    #legend { left: 12px; }
     #counter { right: 12px; bottom: 16px; }
   }
 </style>
@@ -377,7 +446,7 @@
   <ul class="nav-links">
     <li><a href="index.html">主頁</a></li>
     <li><a href="map.html" class="active">污染地圖</a></li>
-    <li><a href="claude/index.html">互動遊戲</a></li>
+    <li><a href="game.html">互動遊戲</a></li>
   </ul>
   <div class="nav-spacer"></div>
   <span class="nav-sdg-badge">Life Below Water</span>
@@ -418,34 +487,19 @@
     <div class="sidebar-body" id="sidebar-body"></div>
   </aside>
 
-  <!-- LEGEND -->
+  <!-- LEGEND (dynamic, updated by JS) -->
   <div id="legend">
-    <div class="legend-title">全球排放佔比</div>
-    <div class="legend-items">
-      <div class="legend-item">
-        <div class="legend-swatch" style="background:#7b0000;"></div>
-        <span class="legend-text">&gt; 10%（極嚴重）</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-swatch" style="background:#b22222;"></div>
-        <span class="legend-text">1–10%（嚴重）</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-swatch" style="background:#c0522a;"></div>
-        <span class="legend-text">0.1–1%（中等）</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-swatch" style="background:#8b6914;"></div>
-        <span class="legend-text">0.01–0.1%（輕微）</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-swatch" style="background:#2a5a4a;"></div>
-        <span class="legend-text">&lt; 0.01%（極少）</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-swatch" style="background:#1a2d3e;border:1px solid #243d59;"></div>
-        <span class="legend-text">無資料</span>
-      </div>
+    <div class="legend-title" id="legend-title">全球排放佔比</div>
+    <div class="legend-items" id="legend-items"></div>
+  </div>
+
+  <!-- MODE TOGGLE BUTTONS -->
+  <div id="mode-toggle">
+    <div class="mode-label">地圖視角</div>
+    <div class="mode-btns">
+      <button class="mode-btn active" data-mode="share">污染衝擊</button>
+      <button class="mode-btn" data-mode="probability">地理歸因</button>
+      <button class="mode-btn" data-mode="perCapita">系統歸因</button>
     </div>
   </div>
 
@@ -453,7 +507,7 @@
   <div id="counter">
     <div class="counter-num" id="counter-num">—</div>
     <div class="counter-label">公噸塑膠 · 本年度至今</div>
-    <div style="font-family:var(--font-mono);font-size:8px;color:var(--text-faint);margin-top:3px;text-align:right;">（樣本國家合計）</div>
+    <div style="font-family:var(--font-mono);font-size:8px;color:var(--text-faint);margin-top:3px;text-align:right;">*基於 2019 年數據推算</div>
   </div>
 
 </div>
@@ -536,33 +590,122 @@ window.addEventListener('load', async function () {
   loadingEl.classList.add('hidden');
   setTimeout(() => loadingEl.remove(), 700);
 
-  /* ── 3. 初始化地圖 ── */
+  /* ── 3. 初始化地圖（修正視角限制）── */
   const map = L.map('map', {
-    center: [15, 10], zoom: 2, minZoom: 2,
-    zoomControl: true, attributionControl: true,
+    center: [20, 10],
+    zoom: 2,
+    minZoom: 2,
+    maxZoom: 8,
+    zoomControl: true,
+    attributionControl: true,
+    maxBounds: [[-85, -180], [85, 180]],   // 上下不超出
+    maxBoundsViscosity: 1.0,               // 硬性限制，不可拖出邊界
+    worldCopyJump: false,
   });
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  // 底圖：無文字版，移除國家名稱 label
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
     subdomains: 'abcd', maxZoom: 19,
   }).addTo(map);
 
-  /* ── 4. 顏色函式（依 globalShare）── */
-  function choroplethColor(share) {
-    if (share === null || share === undefined) return '#1a2d3e';
-    if (share > 10)   return '#7b0000';
-    if (share > 1)    return '#b22222';
-    if (share > 0.1)  return '#c0522a';
-    if (share > 0.01) return '#8b6914';
-    return '#2a5a4a';
-  }
+  /* ── 4. 三套顏色模式定義 ── */
+  const MODES = {
+    share: {
+      label: '全球排放佔比',
+      tooltipKey: 'globalShare',
+      tooltipSuffix: ' %',
+      tooltipLabel: '全球佔比',
+      getVal: d => d.globalShare,
+      // 藍色系：#1a4d6b（極深）→ #89c2d9（極淺）
+      color(v) {
+        if (v === null) return '#0d1b2a';
+        if (v > 10)   return '#1a4d6b'; // 極嚴重
+        if (v > 1)    return '#2a6f97'; // 嚴重
+        if (v > 0.1)  return '#468faf'; // 中等
+        if (v > 0.01) return '#61a5c2'; // 輕微
+        return '#89c2d9';               // 極少
+      },
+      legend: [
+        { color: '#1a4d6b', label: '> 10%（極嚴重）' },
+        { color: '#2a6f97', label: '1–10%（嚴重）' },
+        { color: '#468faf', label: '0.1–1%（中等）' },
+        { color: '#61a5c2', label: '0.01–0.1%（輕微）' },
+        { color: '#89c2d9', label: '< 0.01%（極少）' },
+        { color: '#0d1b2a', border: true, label: '無資料' },
+      ],
+    },
+    probability: {
+      label: '入海機率',
+      tooltipKey: 'probability',
+      tooltipSuffix: ' %',
+      tooltipLabel: '入海機率',
+      getVal: d => d.probability,
+      // 青綠系：#1a5244（極深）→ #85cdb5（極淺）
+      color(v) {
+        if (v === null) return '#0d1b2a';
+        if (v > 8)    return '#1a5244'; // 極高風險
+        if (v > 4)    return '#2a7a60'; // 高風險
+        if (v > 1)    return '#3d9e7a'; // 中等
+        if (v > 0.1)  return '#5ab896'; // 低
+        return '#85cdb5';               // 極低
+      },
+      legend: [
+        { color: '#1a5244', label: '> 8%（極高風險）' },
+        { color: '#2a7a60', label: '4–8%（高風險）' },
+        { color: '#3d9e7a', label: '1–4%（中等）' },
+        { color: '#5ab896', label: '0.1–1%（低）' },
+        { color: '#85cdb5', label: '< 0.1%（極低）' },
+        { color: '#0d1b2a', border: true, label: '無資料' },
+      ],
+    },
+    perCapita: {
+      label: '人均廢棄物量',
+      tooltipKey: 'perCapita',
+      tooltipSuffix: ' kg',
+      tooltipLabel: '人均',
+      getVal: d => d.perCapita,
+      // 靛紫系：#272760（極深）→ #9595d5（極淺）
+      color(v) {
+        if (v === null) return '#0d1b2a';
+        if (v > 30)   return '#272760'; // 極高
+        if (v > 15)   return '#3a3a8a'; // 高
+        if (v > 5)    return '#5555aa'; // 中等
+        if (v > 1)    return '#7070c0'; // 低
+        return '#9595d5';               // 極低
+      },
+      legend: [
+        { color: '#272760', label: '> 30 kg（極高）' },
+        { color: '#3a3a8a', label: '15–30 kg（高）' },
+        { color: '#5555aa', label: '5–15 kg（中等）' },
+        { color: '#7070c0', label: '1–5 kg（低）' },
+        { color: '#9595d5', label: '< 1 kg（極低）' },
+        { color: '#0d1b2a', border: true, label: '無資料' },
+      ],
+    },
+  };
 
-  /* ── 5. Sidebar ── */
-  const sidebar        = document.getElementById('sidebar');
-  const sidebarCountry = document.getElementById('sidebar-country');
+  let currentMode = 'share';
+
+  /* ── 5. Legend 更新 ── */
+  function updateLegend(mode) {
+    const m = MODES[mode];
+    document.getElementById('legend-title').textContent = m.label;
+    document.getElementById('legend-items').innerHTML = m.legend.map(item => `
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:${item.color};${item.border ? 'border:1px solid #243d59;' : ''}"></div>
+        <span class="legend-text">${item.label}</span>
+      </div>
+    `).join('');
+  }
+  updateLegend(currentMode);
+
+  /* ── 6. Sidebar ── */
+  const sidebar          = document.getElementById('sidebar');
+  const sidebarCountry   = document.getElementById('sidebar-country');
   const sidebarCountryEn = document.getElementById('sidebar-country-en');
-  const sidebarBody    = document.getElementById('sidebar-body');
-  const closeBtn       = document.getElementById('close-btn');
+  const sidebarBody      = document.getElementById('sidebar-body');
+  const closeBtn         = document.getElementById('close-btn');
 
   function fmtNum(n) {
     if (n === null || n === undefined) return '—';
@@ -572,7 +715,6 @@ window.addEventListener('load', async function () {
     if (n === null || n === undefined) return '—';
     return n.toFixed(d);
   }
-
   function probClass(p) {
     if (p === null) return 'low';
     if (p > 3) return 'high';
@@ -588,24 +730,19 @@ window.addEventListener('load', async function () {
     const shareBar = d.globalShare ? Math.min(d.globalShare / 40 * 100, 100) : 0;
     const capBar   = d.perCapita   ? Math.min(d.perCapita / 50 * 100, 100) : 0;
     const probBar  = d.probability ? Math.min(d.probability / 10 * 100, 100) : 0;
-
-    const naNote = `<p class="no-data-note">此國家無此項資料</p>`;
+    const naNote   = `<p class="no-data-note">此國家無此項資料</p>`;
 
     sidebarBody.innerHTML = `
-
-      <!-- Layer 1: 污染衝擊 -->
       <div class="data-section">
         <div class="section-label">第一層 · Layer 1</div>
         <div class="section-title">污染衝擊</div>
-
         ${d.emittedTons !== null ? `
           <div class="big-stat">
             <span class="big-number">${fmtNum(d.emittedTons)}</span>
             <span class="big-unit">公噸／年</span>
           </div>
-          <p style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);">陸源塑膠年排海量</p>
+          <p style="font-family:var(--font-mono);font-size:11px;color:#a0bdd4;">陸源塑膠年排海量</p>
         ` : naNote}
-
         ${d.globalShare !== null ? `
           <div class="bar-container">
             <div class="bar-label-row">
@@ -623,11 +760,9 @@ window.addEventListener('load', async function () {
         ` : ''}
       </div>
 
-      <!-- Layer 2: 地理歸因 -->
       <div class="data-section">
         <div class="section-label">第二層 · Layer 2</div>
         <div class="section-title">地理歸因</div>
-
         ${d.probability !== null ? `
           <div class="prob-number ${pClass}">${fmtDec(d.probability)} %</div>
           <div class="bar-container">
@@ -636,20 +771,16 @@ window.addEventListener('load', async function () {
                    style="width:0%" data-target="${probBar}%"></div>
             </div>
           </div>
-          <p class="explanation">
-            管理不善塑膠經由河流最終入海的機率估算。受地形坡度、河流密度與沿岸距離影響，反映該國地理環境的脆弱性。
-          </p>
+          <p class="explanation">管理不善塑膠經由河流最終入海的機率估算。受地形坡度、河流密度與沿岸距離影響，反映該國地理環境的脆弱性。</p>
         ` : naNote}
       </div>
 
-      <!-- Layer 3: 系統歸因 -->
       <div class="data-section">
         <div class="section-label">第三層 · Layer 3</div>
         <div class="section-title">系統歸因</div>
-
         ${d.perCapita !== null ? `
           <div class="percap-number">${fmtDec(d.perCapita, 1)}
-            <span style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted)">公斤／人／年</span>
+            <span style="font-family:var(--font-mono);font-size:13px;color:#a0bdd4">公斤／人／年</span>
           </div>
           <div class="bar-container">
             <div class="bar-label-row">
@@ -660,13 +791,10 @@ window.addEventListener('load', async function () {
               <div class="bar-fill warn" style="width:0%" data-target="${capBar}%"></div>
             </div>
           </div>
-          <p class="explanation">
-            每人每年產生的管理不善塑膠量，反映廢棄物收集體系與回收基礎設施的整體效率。數值越高，代表系統性失能越嚴重。
-          </p>
+          <p class="explanation">每人每年產生的管理不善塑膠量，反映廢棄物收集體系與回收基礎設施的整體效率。數值越高，代表系統性失能越嚴重。</p>
         ` : naNote}
       </div>
 
-      <!-- Source -->
       <div style="padding:16px 24px;">
         <p style="font-family:var(--font-mono);font-size:9px;color:var(--text-faint);line-height:1.7;">
           資料來源：Our World in Data · Meijer et al. (2021). Science Advances, 7(18).
@@ -676,7 +804,6 @@ window.addEventListener('load', async function () {
 
     sidebar.classList.add('open');
     sidebar.setAttribute('aria-hidden', 'false');
-
     requestAnimationFrame(() => {
       setTimeout(() => {
         sidebarBody.querySelectorAll('.bar-fill').forEach(el => {
@@ -698,17 +825,33 @@ window.addEventListener('load', async function () {
   closeBtn.addEventListener('click', closeSidebar);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
 
-  /* ── 6. GeoJSON Choropleth ── */
+  /* ── 7. GeoJSON Choropleth ── */
   let geojsonLayer = null;
   let activeLayer  = null;
 
-  const DEFAULT_STYLE = { weight: 0.5, color: '#0d1f2f', opacity: 1, fillOpacity: 0.85 };
+  const DEFAULT_STYLE = { weight: 0.4, color: '#0a1520', opacity: 1, fillOpacity: 0.88 };
+
+  function getColor(iso) {
+    const d = countryData[iso];
+    if (!d) return '#0d1b2a';
+    return MODES[currentMode].color(MODES[currentMode].getVal(d));
+  }
 
   function styleFeature(feature) {
-    const iso   = feature.properties.ISO_A3 || feature.properties.iso_a3 || '';
-    const d     = countryData[iso];
-    const share = d?.globalShare ?? null;
-    return { ...DEFAULT_STYLE, fillColor: choroplethColor(share) };
+    const iso = feature.properties.ISO_A3 || feature.properties.iso_a3 || '';
+    return { ...DEFAULT_STYLE, fillColor: getColor(iso) };
+  }
+
+  function buildTooltip(d) {
+    const m   = MODES[currentMode];
+    const val = m.getVal(d);
+    const str = val !== null ? `${typeof val === 'number' && val < 10 ? val.toFixed(2) : Math.round(val)}${m.tooltipSuffix}` : '無資料';
+    return `
+      <div class="marker-tooltip">
+        <strong style="color:#d8e8f5">${d.entityName}</strong><br>
+        <span style="color:#6b8ba4;font-size:10px">${m.tooltipLabel}：${str}</span>
+      </div>
+    `;
   }
 
   function onEachFeature(feature, layer) {
@@ -716,20 +859,15 @@ window.addEventListener('load', async function () {
     const d   = countryData[iso];
     if (!d) return;
 
-    // Tooltip
-    const shareStr = d.globalShare !== null ? `${fmtDec(d.globalShare)} %` : '無資料';
-    layer.bindTooltip(`
-      <div class="marker-tooltip">
-        <strong style="color:#d8e8f5">${d.entityName}</strong><br>
-        <span style="color:#6b8ba4;font-size:10px">全球佔比：${shareStr}</span>
-      </div>
-    `, { sticky: true, className: '' });
+    layer.bindTooltip(buildTooltip(d), { sticky: true, className: '' });
 
     layer.on({
       mouseover(e) {
-        e.target.setStyle({ weight: 2, color: '#a0c8e8', fillOpacity: 1 });
+        e.target.setStyle({ weight: 1.5, color: '#7ab8d4', fillOpacity: 1 });
         e.target.bringToFront();
         document.body.style.cursor = 'pointer';
+        // Update tooltip content for current mode
+        e.target.getTooltip()?.setContent(buildTooltip(d));
       },
       mouseout(e) {
         if (e.target !== activeLayer) geojsonLayer?.resetStyle(e.target);
@@ -739,7 +877,7 @@ window.addEventListener('load', async function () {
         L.DomEvent.stopPropagation(e);
         if (activeLayer && geojsonLayer) geojsonLayer.resetStyle(activeLayer);
         activeLayer = e.target;
-        e.target.setStyle({ weight: 2.5, color: '#ffffff', fillOpacity: 1 });
+        e.target.setStyle({ weight: 2, color: '#c8e0f0', fillOpacity: 1 });
         e.target.bringToFront();
         openSidebar(d);
       },
@@ -754,9 +892,26 @@ window.addEventListener('load', async function () {
 
   map.on('click', () => closeSidebar());
 
-  /* ── 7. Live Counter（以樣本國家總量為基礎）── */
-  const totalAnnual = Object.values(countryData)
-    .reduce((sum, d) => sum + (d.emittedTons ?? 0), 0);
+  /* ── 8. Mode Toggle ── */
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentMode = btn.dataset.mode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateLegend(currentMode);
+      if (geojsonLayer) {
+        geojsonLayer.eachLayer(layer => {
+          const iso = layer.feature?.properties?.ISO_A3 || layer.feature?.properties?.iso_a3 || '';
+          if (iso && iso !== activeLayer?.feature?.properties?.ISO_A3) {
+            layer.setStyle({ fillColor: getColor(iso) });
+          }
+        });
+      }
+    });
+  });
+
+  /* ── 9. Live Counter（全球總量 979,458 公噸/年）── */
+  const totalAnnual = 979458;
   const tonPerMs  = totalAnnual / (365.25 * 24 * 3600 * 1000);
   const yearStart = new Date(new Date().getFullYear(), 0, 1).getTime();
   const counterEl = document.getElementById('counter-num');
