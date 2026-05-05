@@ -338,7 +338,7 @@
     }
     .counter-box { position: relative; z-index: 2; }
     .counter-eyebrow { font-size: 0.75rem; letter-spacing: 0.25em; color: var(--warn); text-transform: uppercase; margin-bottom: 16px; }
-    #plastic-counter {
+    #plastic {
       font-family: 'Playfair Display', serif;
       font-size: clamp(3rem, 7vw, 6rem);
       color: var(--warn); font-weight: 900;
@@ -382,7 +382,7 @@
     .action-item p { font-size: 0.85rem; line-height: 1.7; color: var(--text); }
     .action-game-note { font-size: 0.75rem; color: var(--mint); margin-top: 10px; font-style: italic; }
     .cta-banner {
-      margin-top: 60px; padding: 40px;
+      margin-top: 60px; padding: 35px 40px 40px 40px;
       background: rgba(0,95,115,0.06);
       border: 1px solid rgba(148,210,189,0.2); border-radius: 6px;
       text-align: center;
@@ -582,9 +582,10 @@
   <section id="counter-section">
     <div class="container counter-box">
       <p class="counter-eyebrow" data-aos="fade-up">Real-Time Data</p>
-      <h2 class="section-title" data-aos="fade-up" data-aos-delay="80" style="margin-bottom:8px;">今年已流入海洋的塑膠</h2>
+      <h2 class="section-title" data-aos="fade-up" data-aos-delay="80" style="margin-bottom:8px;">2019年流入海洋的總塑膠量</h2>
       <div style="margin-top:32px;" data-aos="fade-up" data-aos-delay="160">
-        <div id="plastic-counter">0<span class="counter-unit">噸</span></div>
+        <!-- <div id="plastic-counter">0<span class="counter-unit">噸</span></div> -->
+        <div id="plastic">979,458<span class="counter-unit">噸</span></div>
         <p class="counter-desc" style="margin-top:10px;">數字背後，是每一條魚的困境，每一片沙灘的哀愁。</p>
       </div>
       <div class="map-teaser" data-aos="fade-up" data-aos-delay="240">
@@ -629,11 +630,9 @@
       </div>
 
       <div class="cta-banner" data-aos="fade-up" data-aos-delay="200">
-        <p>對現況感到懷疑？前往 <a href="map.html">【地圖頁】</a> 查看各國真實數據。<br>
         想親身體驗海洋生物的困境嗎？</p>
         <div class="cta-banner-btns">
           <a href="claude/index.html" class="btn-primary">進入深海遊戲</a>
-          <!-- <a href="map.html" class="btn-outline">🗺️ 查看全球地圖</a> -->
         </div>
       </div>
     </div>
