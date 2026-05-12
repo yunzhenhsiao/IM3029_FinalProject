@@ -6,6 +6,7 @@
 <title>全球海洋塑膠污染地圖 · SDG 14</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
@@ -24,23 +25,76 @@
   #app {
     height: 100vh;
     position: relative;
-    padding-top: 48px; /* nav height */
   }
 
   /* ─── MAP ─────────────────────────────────────────────── */
-  #map-container { position: absolute; inset: 48px 0 0 0; }
+  #map-container { position: absolute; inset: 0; }
   #map { width: 100%; height: 100%; }
 
-  /* ─── HEADER OVERLAY ──────────────────────────────────── */
+  /* ─── FIX: Windows Chrome focus outline on map polygons ── */
+  .leaflet-interactive:focus {
+    outline: none !important;
+  }
+  path.leaflet-interactive:focus {
+    outline: none !important;
+  }
+
+  /* ─── FORCE PLAYFAIR DISPLAY (cross-platform) ─────────── */
+  h1, .big-number, .prob-number, .percap-number,
+  #sidebar-country, .counter-num {
+    font-family: 'Playfair Display', 'Georgia', 'Times New Roman', serif !important;
+  }
+
+  /* ─── HEADER OVERLAY — 毛玻璃 ────────────────────────── */
   #header {
     position: absolute;
     top: 0; left: 0;
     z-index: 1000;
-    padding: 20px 28px 40px;
-    background: linear-gradient(180deg, rgba(6,13,23,0.95) 50%, transparent 100%);
+    padding: 20px 28px 24px;
+    background: rgba(6, 13, 23, 0.45);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-right: 1px solid rgba(255,255,255,0.06);
     pointer-events: none;
-    max-width: 480px;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-radius: 0 0 8px 0;
   }
+
+  /* 品牌標題 — Playfair，淡色，帶箭頭 */
+  .header-brand {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    text-decoration: none;
+    pointer-events: all;
+    cursor: pointer;
+    margin-bottom: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.25s;
+    font-style: italic;
+  }
+  .header-brand::before {
+    content: '←';
+    font-style: normal;
+    font-size: 12px;
+    transition: transform 0.25s;
+  }
+  .header-brand:hover {
+    color: var(--text-muted);
+  }
+  .header-brand:hover::before {
+    transform: translateX(-3px);
+  }
+
+  .header-text { flex-shrink: 0; }
 
   .kicker {
     font-family: var(--font-mono);
@@ -155,9 +209,9 @@
   /* ─── SIDEBAR ─────────────────────────────────────────── */
   #sidebar {
     position: fixed;
-    top: 48px; right: 0;
+    top: 0; right: 0;
     width: var(--sidebar-w);
-    height: calc(100vh - 48px);
+    height: 100vh;
     z-index: 2000;
     background: var(--surface);
     border-left: 1px solid var(--border);
@@ -335,51 +389,48 @@
     margin-top: 8px;
   }
 
-  /* ─── MODE TOGGLE ─────────────────────────────────────── */
+  /* ─── MODE TOGGLE — 水平排列，subtitle 下方 ─────────── */
   #mode-toggle {
-    position: fixed;
-    bottom: 28px; left: 24px;
-    z-index: 1500;
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-start;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    pointer-events: all;
   }
 
   .mode-label {
     font-family: var(--font-mono);
     font-size: 9px;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 2px;
+    color: var(--text-faint);
+    flex-shrink: 0;
   }
 
   .mode-btns {
     display: flex;
-    gap: 6px;
+    gap: 5px;
   }
 
   .mode-btn {
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.08em;
-    padding: 6px 12px;
+    padding: 5px 13px;
     border-radius: 2px;
     border: 1px solid var(--border-light);
-    background: rgba(11,22,35,0.92);
+    background: rgba(6,13,23,0.5);
     color: var(--text-muted);
     cursor: pointer;
-    backdrop-filter: blur(8px);
     transition: background 0.2s, color 0.2s, border-color 0.2s;
     white-space: nowrap;
   }
   .mode-btn:hover {
-    background: var(--surface2);
+    background: rgba(11,22,35,0.8);
     color: var(--text-primary);
   }
   .mode-btn.active {
-    background: var(--surface2);
+    background: rgba(11,22,35,0.85);
     color: var(--text-primary);
     border-color: var(--accent);
   }
@@ -387,7 +438,7 @@
   /* ─── LEGEND ──────────────────────────────────────────── */
   #legend {
     position: fixed;
-    bottom: 84px; left: 24px;
+    bottom: 28px; left: 24px;
     z-index: 1500;
     background: rgba(11,22,35,0.92);
     border: 1px solid var(--border);
@@ -440,18 +491,6 @@
 </head>
 <body>
 
-<!-- ── NAVIGATION（共用，三人複製同一份）── -->
-<nav id="site-nav">
-  <a class="nav-brand" href="index.html">SDG 14</a>
-  <ul class="nav-links">
-    <li><a href="index.html">主頁</a></li>
-    <li><a href="map.html" class="active">污染地圖</a></li>
-    <li><a href="game.html">互動遊戲</a></li>
-  </ul>
-  <div class="nav-spacer"></div>
-  <!--<span class="nav-sdg-badge">Life Below Water</span>-->
-</nav>
-
 <div id="app">
 
   <!-- LOADING SCREEN -->
@@ -469,9 +508,20 @@
 
   <!-- HEADER OVERLAY -->
   <header id="header">
-    <div class="kicker">SDG 14 · 海洋生態保護</div>
-    <h1>全球海洋塑膠<br>污染溯源地圖</h1>
-    <p class="subtitle">資料來源：Our World in Data · Meijer et al. (2021)</p>
+    <a class="header-brand" href="index.html">404 : Ocean Not Found</a>
+    <div class="header-text">
+      <!--<div class="kicker">SDG 14 · 海洋生態保護</div>-->
+      <h1>全球海洋塑膠<br>污染溯源地圖</h1>
+      <p class="subtitle">資料來源：Our World in Data · Meijer et al. (2021)</p>
+    </div>
+    <div id="mode-toggle">
+      <div class="mode-label">視角</div>
+      <div class="mode-btns">
+        <button class="mode-btn active" data-mode="share">污染衝擊</button>
+        <button class="mode-btn" data-mode="probability">地理歸因</button>
+        <button class="mode-btn" data-mode="perCapita">系統歸因</button>
+      </div>
+    </div>
   </header>
 
   <!-- SIDEBAR -->
@@ -491,16 +541,6 @@
   <div id="legend">
     <div class="legend-title" id="legend-title">全球排放佔比</div>
     <div class="legend-items" id="legend-items"></div>
-  </div>
-
-  <!-- MODE TOGGLE BUTTONS -->
-  <div id="mode-toggle">
-    <div class="mode-label">地圖視角</div>
-    <div class="mode-btns">
-      <button class="mode-btn active" data-mode="share">污染衝擊</button>
-      <button class="mode-btn" data-mode="probability">地理歸因</button>
-      <button class="mode-btn" data-mode="perCapita">系統歸因</button>
-    </div>
   </div>
 
   <!-- COUNTER -->
@@ -859,7 +899,7 @@ window.addEventListener('load', async function () {
     const d   = countryData[iso];
     if (!d) return;
 
-    layer.bindTooltip(buildTooltip(d), { sticky: true, className: '' });
+    layer.bindTooltip(buildTooltip(d), { sticky: false, className: '', direction: 'top' });
 
     layer.on({
       mouseover(e) {
