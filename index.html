@@ -60,9 +60,7 @@
       transition: all 0.5s ease;
     }
 
-    /* 當頁面捲動後，加入毛玻璃效果而非純色背景 */
     #navbar.scrolled {
-      /* 使用極低透明度的深色，並搭配高模糊度 */
       background: rgba(0, 18, 25, 0.2); 
       backdrop-filter: blur(12px); 
       -webkit-backdrop-filter: blur(12px);
@@ -141,7 +139,6 @@
       100% { transform: translateY(-110vh) translateX(20px); opacity: 0; }
     }
 
-    /* Mouse parallax glow */
     #global-glow {
       position: fixed; inset: 0; z-index: 1; pointer-events: none;
       background: radial-gradient(circle 400px at 50% 50%, rgba(148,210,189,0.1) 0%, transparent 70%);
@@ -847,7 +844,6 @@
       const layer = document.getElementById('fish-layer');
       if (!layer) return;
 
-      // 設定魚的資料：emoji、初始高度(top)、遊動距離(dist)、垂直偏移(dy)、秒數(dur)、大小(size)
       const fishData = [
         { emoji:'🐠', top: 8,  dist: 1400, dy:  30, dur: 28, size: 20 },
         { emoji:'🐟', top: 18, dist: 1600, dy: -20, dur: 34, size: 18 },
@@ -867,20 +863,18 @@
         el.style.left = '-80px';
         el.style.fontSize = f.size + 'px';
         
-        // 將隨機參數傳遞給 CSS 變數
         el.style.setProperty('--fish-dist', f.dist + 'px');
         el.style.setProperty('--fish-dy', f.dy + 'px');
         el.style.animationDuration = f.dur + 's';
-        el.style.animationDelay = (-f.dur * 0.1 * i) + 's'; // 錯開起始時間
+        el.style.animationDelay = (-f.dur * 0.1 * i) + 's'; 
         
         layer.appendChild(el);
       });
 
-      // 視差滾動效果：捲動時魚會產生不同速率的位移
       window.addEventListener('scroll', () => {
         const scrollY = window.scrollY;
         layer.querySelectorAll('.para-fish').forEach((el, i) => {
-          const speed = 0.03 + i * 0.008; // 每條魚的視差速度略有不同
+          const speed = 0.03 + i * 0.008; 
           el.style.transform = `translateY(${scrollY * speed}px)`;
         });
       });
@@ -906,28 +900,23 @@
         section.appendChild(el);
       });
     })();
-    // ===== AOS Init =====
     AOS.init({ duration: 800, once: true, offset: 80 });
 
-    // ===== Navbar scroll =====
     const navbar = document.getElementById('navbar');
     window.addEventListener('scroll', () => {
       navbar.classList.toggle('scrolled', window.scrollY > 60);
     });
 
-    // ===== Mouse parallax glow =====
-    // 修改滑鼠跟隨邏輯
+
     const globalGlow = document.getElementById('global-glow');
 
     document.addEventListener('mousemove', (e) => {
-      // 使用 e.clientX 和 e.clientY 取得相對於瀏覽器視窗的位置
       const x = (e.clientX / window.innerWidth) * 100;
       const y = (e.clientY / window.innerHeight) * 100;
       
       globalGlow.style.background = `radial-gradient(circle 500px at ${x}% ${y}%, rgba(148,210,189,0.12) 0%, transparent 70%)`;
     });
 
-    // ===== Typewriter =====
     const messages = [
       "人類的每一口呼吸，有 50% 的氧氣來自海洋。",
       "但現在，它正在窒息。",
@@ -957,10 +946,8 @@
     }
     setTimeout(typeNext, 2200);
 
-    // ===== Card flip =====
     function flipCard(card) {
       card.classList.toggle('flipped');
-      // Trigger progress bars on flip
       if (card.classList.contains('flipped')) {
         card.querySelectorAll('.progress-fill').forEach(bar => {
           bar.style.width = bar.dataset.width + '%';
@@ -968,17 +955,14 @@
       }
     }
 
-    // 計算基準：每年 1100 萬噸 → 每秒約 348.5 公斤
     const KG_PER_SECOND = 348.5;
 
-    // 計算今年從 1/1 到現在過了多少秒
     function getSecondsThisYear() {
       const now = new Date();
       const start = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
       return (now - start) / 1000;
     }
 
-    // 格式化數字為千分位，並轉為公噸
     function formatTons(kg) {
       const tons = Math.floor(kg / 1000);
       return tons.toLocaleString('zh-TW');
@@ -987,7 +971,6 @@
     let plasticKg = 0;
     let counterStarted = false;
 
-    // 啟動計數器邏輯
     function startDynamicCounter() {
       if (counterStarted) return;
       counterStarted = true;
@@ -997,22 +980,18 @@
       const now = new Date();
       sinceEl.textContent = `自 ${now.getFullYear()} 年 1 月 1 日起累計`;
 
-      // 設定初始數據
       plasticKg = getSecondsThisYear() * KG_PER_SECOND;
       
-      // 每秒更新一次
       setInterval(() => {
         plasticKg += KG_PER_SECOND;
         el.innerHTML = formatTons(plasticKg) + '<span class="counter-unit">噸</span>';
         
-        // 觸發 CSS 動態效果
         el.classList.remove('tick');
-        void el.offsetWidth; // 強制重繪以重啟動畫
+        void el.offsetWidth;
         el.classList.add('tick');
       }, 1000);
     }
 
-    // 監聽滾動事件：當區塊進入視窗 30% 時啟動
     const counterSection = document.getElementById('counter-section');
     const counterObserver = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) startDynamicCounter();
