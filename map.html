@@ -10,11 +10,46 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-<!-- 共用樣式 -->
-<link rel="stylesheet" href="css/shared.css">
-
+<!-- 共用樣式（已內嵌） -->
 <style>
-  /* ─── PAGE-SPECIFIC STYLES ────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   shared.css — SDG 14 Ocean Plastic Project
+   共用設計系統：所有頁面引入此檔案
+═══════════════════════════════════════════════════════ */
+
+/* ─── DESIGN TOKENS ───────────────────────────────────── */
+:root {
+  --bg:           #060d17;
+  --surface:      #0b1623;
+  --surface2:     #0f1e30;
+  --border:       #1a2d44;
+  --border-light: #243d59;
+  --text-primary: #d8e8f5;
+  --text-muted:   #6b8ba4;
+  --text-faint:   #3a5570;
+  --accent:       rgb(207, 207, 204);
+  --accent-dim:   rgb(155, 155, 152);
+  --danger:       #e05c5c;
+  --warn:         #c89b3c;
+  --safe:         #3cb27a;
+
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-mono:    'IBM Plex Mono', 'Courier New', monospace;
+  --font-body:    'IBM Plex Sans', system-ui, sans-serif;
+}
+
+/* ─── RESET ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ─── PAGE-SPECIFIC STYLES ────────────────────────────── */
   :root {
     --sidebar-w: 380px;
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -28,8 +63,8 @@
   }
 
   /* ─── MAP ─────────────────────────────────────────────── */
-  #map-container { position: absolute; inset: 0; }
-  #map { width: 100%; height: 100%; }
+  #map-container { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+  #map { width: 100%; height: 100%; background-color: #2A2A2A !important;}
 
   /* ─── FIX: Windows Chrome focus outline on map polygons ── */
   .leaflet-interactive:focus {
@@ -40,97 +75,129 @@
   }
 
   /* ─── FORCE PLAYFAIR DISPLAY (cross-platform) ─────────── */
-  h1, .big-number, .prob-number, .percap-number,
-  #sidebar-country, .counter-num {
+  h1, .counter-num {
     font-family: 'Playfair Display', 'Georgia', 'Times New Roman', serif !important;
   }
 
-  /* ─── HEADER OVERLAY — 毛玻璃 ────────────────────────── */
-  #header {
-    position: absolute;
-    top: 0; left: 0;
-    z-index: 1000;
-    padding: 20px 28px 24px;
-    background: rgba(6, 13, 23, 0.45);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    border-right: 1px solid rgba(255,255,255,0.06);
-    pointer-events: none;
-    max-width: 560px;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    border-radius: 0 0 8px 0;
+  /* ─── TOP BRAND（浮在地圖左上，無背景色塊）─────────── */
+  #top-brand {
+    position: fixed;
+    top: 10px;
+    left: 35px;
+    z-index: 1500;
+    pointer-events: none;          /* 預設不攔截地圖點擊 */
   }
+  #top-brand > * { pointer-events: auto; }
 
-  /* 品牌標題 — Playfair，淡色，帶箭頭 */
-  .header-brand {
+  .brand-link {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 13px;
+    font-size: 15px;
+    font-style: italic;
     font-weight: 400;
     letter-spacing: 0.06em;
-    color: var(--text-faint);
+    color: rgba(216, 232, 245, 0.42);
     text-decoration: none;
-    pointer-events: all;
-    cursor: pointer;
-    margin-bottom: 16px;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 5px;
     transition: color 0.25s;
-    font-style: italic;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.95);
+    white-space: nowrap;
   }
-  .header-brand::before {
+  .brand-link::before {
     content: '←';
     font-style: normal;
-    font-size: 12px;
     transition: transform 0.25s;
   }
-  .header-brand:hover {
-    color: var(--text-muted);
-  }
-  .header-brand:hover::before {
-    transform: translateX(-3px);
-  }
+  .brand-link:hover { color: rgba(216, 232, 245, 0.78); }
+  .brand-link:hover::before { transform: translateX(-3px); }
 
-  .header-text { flex-shrink: 0; }
-
-  .kicker {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .kicker::before {
-    content: '';
-    display: inline-block;
-    width: 18px; height: 1px;
-    background: var(--accent);
-  }
-
-  h1 {
-    font-family: var(--font-display);
-    font-size: clamp(20px, 2.4vw, 30px);
-    font-weight: 900;
-    line-height: 1.15;
-    letter-spacing: -0.01em;
-  }
-
-  .subtitle {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-muted);
+  .map-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--text-primary);
+    line-height: 1.28;
     margin-top: 6px;
-    letter-spacing: 0.04em;
+    text-shadow:
+      0 1px 6px rgba(0,0,0,1),
+      0 2px 18px rgba(0,0,0,0.7);
   }
 
-  /* ─── LOADING OVERLAY ─────────────────────────────────── */
+  /* ─── 視角切換 tab（通用，legend 內使用）────────────── */
+  .mode-btns {
+    display: flex;
+    gap: 3px;
+  }
+
+  .mode-btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    padding: 4px 0;
+    flex: 1;
+    text-align: center;
+    border-radius: 2px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: rgba(107, 139, 164, 0.6);
+    cursor: pointer;
+    transition: border-color 0.22s ease, color 0.22s ease, background 0.22s ease;
+    white-space: nowrap;
+  }
+  .mode-btn:hover {
+    border-color: rgba(255,255,255,0.15);
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.04);
+  }
+  /* active 顏色各自對應 legend 色系 */
+  .mode-btn[data-mode="share"].active {
+    border-color: rgba(97, 165, 194, 0.55);   /* 藍色系 */
+    color: #89c2d9;
+    background: rgba(42, 111, 151, 0.08);
+  }
+  .mode-btn[data-mode="probability"].active {
+    border-color: rgba(90, 184, 150, 0.55);   /* 青綠色系 */
+    color: #5ab896;
+    background: rgba(61, 158, 122, 0.08);
+  }
+  .mode-btn[data-mode="perCapita"].active {
+    border-color: rgba(149, 149, 213, 0.55);  /* 靛紫色系 */
+    color: #9595d5;
+    background: rgba(112, 112, 192, 0.08);
+  }
+
+  /* ─── 桌機版視角按鈕（移至 #top-brand 標題下方）─── */
+  #top-brand .mode-btns {
+    margin-top: 10px;
+  }
+  /* 浮在地圖上，加文字陰影確保可讀性 */
+  #top-brand .mode-btn {
+    text-shadow: 0 1px 4px rgba(0,0,0,0.85);
+  }
+
+  /* ─── MOBILE MODE BUTTON（手機版循環切換，桌機隱藏）── */
+  #mobile-mode-btn { display: none; }
+
+  /* ─── LEGEND TOGGLE（手機版展開按鈕，桌機隱藏）───── */
+  #legend-toggle { display: none; }
+
+  /* ─── MOBILE SIDEBAR（手機版觸發 / 關閉，桌機隱藏）── */
+  #mobile-sidebar-btn  { display: none; }
+  #sidebar-close-mobile { display: none; }
+
+  /* ─── MOBILE CARD（手機版資訊卡，桌機隱藏）─────── */
+  #mobile-card, #mobile-card-overlay { display: none; }
+  .mobile-mode-icon { display: inline-block; }
+  @keyframes spin-once {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  .mobile-mode-icon.spinning {
+    animation: spin-once 0.35s ease;
+  }
+
   #loading {
     position: absolute;
     inset: 0;
@@ -178,6 +245,14 @@
     font-size: 9px !important;
   }
   .leaflet-control-attribution a { color: var(--text-muted) !important; }
+  /* 讓共用容器回到底部，attribution 維持原位 */
+  .leaflet-bottom.leaflet-right { bottom: 0 !important; }
+  /* 只把 zoom 控制獨立定位在 counter 上方 */
+  .leaflet-control-zoom {
+    position: fixed !important;
+    bottom: 100px !important;
+    right: 10px !important;
+  }
   .leaflet-control-zoom a {
     background: var(--surface2) !important;
     color: var(--text-primary) !important;
@@ -206,6 +281,115 @@
   }
   .leaflet-tooltip::before { display: none; }
 
+  /* ─── POPUP CARD ──────────────────────────────────────── */
+  .leaflet-popup-content-wrapper {
+    background: rgba(8, 16, 28, 0.97) !important;
+    border: 1px solid rgba(100,160,210,0.25) !important;
+    border-radius: 4px !important;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.7) !important;
+    padding: 0 !important;
+    backdrop-filter: blur(12px);
+    min-width: 260px;
+    max-width: 320px;
+  }
+  .leaflet-popup-content {
+    margin: 0 !important;
+    width: auto !important;
+    max-height: auto!important;
+    overflow-y:auto !important;
+  }
+  .leaflet-popup-tip-container { display: none; }
+  .leaflet-popup, .leaflet-popup-pane, .sdg-popup {
+    z-index: 2200 !important;
+  }
+  .leaflet-popup-close-button {
+    color: rgba(160,190,220,0.5) !important;
+    font-size: 18px !important;
+    top: 8px !important; right: 10px !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+  }
+  .leaflet-popup-close-button:hover { color: #d8e8f5 !important; background: none !important; }
+
+  /* popup inner layout */
+  .pc-head {
+    display: flex;
+    flex-direction: column;   /* 國家名稱在上，ISO 簡寫在下，不與 × 按鈕衝突 */
+    align-items: flex-start;
+    gap: 3px;
+    padding: 12px 36px 10px 16px;  /* 右側留空給 × 關閉按鈕 */
+    border-bottom: 1px solid rgba(100,160,210,0.15);
+  }
+  .pc-name {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    color: #d8e8f5;
+    line-height: 1.2;
+  }
+  .pc-iso {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: rgba(160,190,220,0.5);
+  }
+  .pc-tagline {
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(100,160,210,0.12);
+    font-size: 11px;
+    font-style: italic;
+    color: rgba(160,190,220,0.7);
+    line-height: 1.6;
+  }
+  .pc-row {
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(100,160,210,0.1);
+  }
+  .pc-row:last-child { border-bottom: none; padding-bottom: 14px; }
+  .pc-row-head {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+  .pc-row-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .pc-val {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .pc-val.danger { color: #e05a5a; }
+  .pc-val.warn   { color: #e0a050; }
+  .pc-val.teal   { color: #3d9e7a; }
+  .pc-val.purple { color: #7070c0; }
+  .pc-rank {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: rgba(160,190,220,0.55);
+    white-space: nowrap;
+  }
+  .pc-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: rgba(160,190,220,0.6);
+    margin-top: 3px;
+  }
+  .pc-nodata {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: rgba(160,190,220,0.35);
+    font-style: italic;
+  }
+
   /* ─── SIDEBAR ─────────────────────────────────────────── */
   #sidebar {
     position: fixed;
@@ -217,241 +401,222 @@
     border-left: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    transform: translateX(100%);
     transition: transform 0.55s var(--ease-out);
     overflow: hidden;
   }
-  #sidebar.open {
-    transform: translateX(0);
+  #sidebar.collapsed {
+    transform: translateX(calc(var(--sidebar-w) - 0px));
+  }
+  #sidebar:not(.collapsed) {
     box-shadow: -20px 0 80px rgba(0,0,0,0.6);
   }
 
-  .sidebar-header {
-    padding: 22px 24px 18px;
-    border-bottom: 1px solid var(--border);
+  /* ─── SIDEBAR TAB (貼右邊緣) ─────────────────────────── */
+  #sidebar-tab {
+    position: fixed;
+    top: 50%;
+    right: var(--sidebar-w);
+    transform: translateY(-50%);
+    z-index: 2001;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-right: none;
+    border-radius: 4px 0 0 4px;
+    padding: 14px 8px;
+    cursor: pointer;
+    transition: right 0.55s var(--ease-out), background 0.2s;
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-shrink: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
   }
-  .sidebar-kicker {
+  #sidebar-tab:hover { background: var(--surface2); }
+  #sidebar.collapsed ~ #sidebar-tab,
+  #sidebar-tab.collapsed-pos {
+    right: 0;
+  }
+  .sidebar-tab-text {
     font-family: var(--font-mono);
     font-size: 9px;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
+    color: var(--text-muted);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+  .sidebar-tab-arrow {
+    font-size: 12px;
     color: var(--accent);
-    margin-bottom: 6px;
+    writing-mode: horizontal-tb;
   }
-  #sidebar-country {
-    font-family: var(--font-display);
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1.2;
+
+  /* ─── SIDEBAR SEARCH ──────────────────────────────────── */
+  #sidebar-search-wrap {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
   }
-  #sidebar-country-en {
+  #sidebar-search {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-light);
+    border-radius: 3px;
+    padding: 8px 12px 8px 32px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+  #sidebar-search::placeholder { color: var(--text-faint); }
+  #sidebar-search:focus { border-color: var(--accent); }
+  .search-icon-wrap {
+    position: relative;
+  }
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: var(--text-faint);
+    pointer-events: none;
+  }
+
+  /* ─── SEARCH RESULTS ──────────────────────────────────── */
+  #sidebar-search-results {
+    flex-shrink: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    border-bottom: 1px solid var(--border);
+    display: none;
+  }
+  #sidebar-search-results.visible { display: block; }
+
+  .search-result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .search-result-item:last-child { border-bottom: none; }
+  .search-result-item:hover { background: var(--surface2); }
+  .search-result-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-primary);
+  }
+  .search-result-val {
     font-family: var(--font-mono);
     font-size: 10px;
-    color: var(--text-muted);
-    margin-top: 2px;
-    letter-spacing: 0.06em;
+    color: var(--accent);
   }
 
-  #close-btn {
-    background: none;
-    border: 1px solid var(--border-light);
-    color: var(--text-muted);
-    width: 28px; height: 28px;
-    border-radius: 2px;
-    cursor: pointer;
-    font-size: 14px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    transition: background 0.2s, color 0.2s;
-  }
-  #close-btn:hover { background: var(--border); color: var(--text-primary); }
-
-  .sidebar-body {
+  /* ─── RANKING LIST ────────────────────────────────────── */
+  #sidebar-ranking-wrap {
     flex: 1;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
   }
-
-  /* ─── DATA SECTIONS ───────────────────────────────────── */
-  .data-section {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-    animation: fadeUp 0.4s ease both;
-  }
-  .data-section:nth-child(2) { animation-delay: 0.05s; }
-  .data-section:nth-child(3) { animation-delay: 0.10s; }
-  .data-section:nth-child(4) { animation-delay: 0.15s; }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .section-label {
+  #sidebar-ranking-title {
+    padding: 12px 16px 11px 13px;  /* 左側讓出 3px 給豎線 */
     font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.22em;
+    font-size: 11px;               /* 稍微放大 */
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 4px;
+    color: transparent;                    /* 由 JS renderRanking() 動態設定 */
+    border-left: 3px solid transparent;   /* 由 JS renderRanking() 動態設定 */
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 1;
   }
-  .section-title {
-    font-family: var(--font-display);
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 14px;
-  }
-
-  .big-stat {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-    margin-bottom: 6px;
-  }
-  .big-number {
-    font-family: var(--font-display);
-    font-size: 40px;
-    font-weight: 900;
-    line-height: 1;
-    color: var(--danger);
-    letter-spacing: -0.03em;
-  }
-  .big-unit {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 0.08em;
-  }
-
-  .stat-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border);
-  }
-  .stat-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.06em; }
-  .stat-val   { font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--accent); }
-
-  .bar-container { margin-top: 12px; }
-  .bar-label-row {
-    display: flex;
-    justify-content: space-between;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-bottom: 5px;
-  }
-  .bar-track {
-    height: 6px;
-    background: var(--border);
-    border-radius: 1px;
-    overflow: hidden;
-  }
-  .bar-fill {
-    height: 100%;
-    border-radius: 1px;
-    transition: width 0.8s var(--ease-out);
-  }
-  .bar-fill.danger { background: var(--danger); }
-  .bar-fill.warn   { background: var(--warn); }
-  .bar-fill.safe   { background: var(--safe); }
-
-  .prob-number { font-family: var(--font-display); font-size: 36px; font-weight: 900; line-height: 1; letter-spacing: -0.02em; margin-bottom: 6px; }
-  .prob-number.high { color: var(--danger); }
-  .prob-number.mid  { color: var(--warn); }
-  .prob-number.low  { color: var(--safe); }
-
-  .percap-number { font-family: var(--font-display); font-size: 36px; font-weight: 900; line-height: 1; letter-spacing: -0.02em; color: var(--warn); margin-bottom: 6px; }
-
-  .explanation {
-    font-family: var(--font-body);
-    font-size: 12px;
-    color: var(--text-muted);
-    line-height: 1.65;
-    margin-top: 10px;
-    border-left: 2px solid var(--border-light);
-    padding-left: 12px;
-  }
-
-  .no-data-note {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-faint);
-    font-style: italic;
-    margin-top: 8px;
-  }
-
-  /* ─── MODE TOGGLE — 水平排列，subtitle 下方 ─────────── */
-  #mode-toggle {
+  .ranking-item {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: 14px;
-    pointer-events: all;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
   }
-
-  .mode-label {
+  .ranking-item:hover { background: var(--surface2); }
+  .ranking-num {
     font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    font-size: 10px;
     color: var(--text-faint);
+    width: 16px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .ranking-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-primary);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ranking-val {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent);
     flex-shrink: 0;
   }
 
-  .mode-btns {
-    display: flex;
-    gap: 5px;
-  }
+  /* ─── MODE TOGGLE（同上，保留區塊避免 specificity 問題）── */
 
-  .mode-btn {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    padding: 5px 13px;
-    border-radius: 2px;
-    border: 1px solid var(--border-light);
-    background: rgba(6,13,23,0.5);
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
-    white-space: nowrap;
-  }
-  .mode-btn:hover {
-    background: rgba(11,22,35,0.8);
-    color: var(--text-primary);
-  }
-  .mode-btn.active {
-    background: rgba(11,22,35,0.85);
-    color: var(--text-primary);
-    border-color: var(--accent);
+  #sidebar.opened {
+    transform: translateX(0);
   }
 
   /* ─── LEGEND ──────────────────────────────────────────── */
   #legend {
     position: fixed;
-    bottom: 28px; left: 24px;
+    bottom: 35px; left: 21px;
     z-index: 1500;
     background: rgba(11,22,35,0.92);
     border: 1px solid var(--border);
-    padding: 14px 18px;
+    padding: 14px 16px;
     backdrop-filter: blur(8px);
-    min-width: 190px;
+    min-width: 216px;
   }
+
+  /* 視角切換小標題 */
+  .legend-section-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    color: rgb(207, 207, 204);
+  }
+
+  /* 分隔線（延伸至 padding 邊緣）*/
+  .legend-separator {
+    height: 1px;
+    background: var(--border);
+    margin: 12px -16px;
+  }
+
   .legend-title {
     font-family: var(--font-mono);
     font-size: 9px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: rgb(207, 207, 204);
     margin-bottom: 10px;
   }
   .legend-items { display: flex; flex-direction: column; gap: 7px; }
@@ -459,33 +624,229 @@
   .legend-swatch { width: 14px; height: 14px; flex-shrink: 0; border-radius: 2px; }
   .legend-text { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
 
+  /* 設定 Legend 的過度動畫與初始狀態 */
+  #legend {
+    transition: transform 0.3s var(--ease-out), opacity 0.3s;
+  }
+
+  /* 當視窗寬度小於 1000px (假設是一半時) 自動隱藏或縮小 */
+  @media (max-width: 1000px) {
+    #legend {
+      transform: translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  /* 收合按鈕的樣式 (可自行添加 HTML 按鈕) */
+  .legend-collapsed #legend {
+    display: none;
+  }
   /* ─── COUNTER ─────────────────────────────────────────── */
   #counter {
     position: fixed;
     bottom: 28px; right: 24px;
     z-index: 1500;
     text-align: right;
+    color: rgb(207, 207, 204);
   }
-  .counter-num   { font-family: var(--font-display); font-size: 28px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.03em; line-height: 1; }
+  .counter-num   { font-family: var(--font-display); font-size: 28px; font-weight: 900;     color: rgb(207, 207, 204);
+; letter-spacing: -0.03em; line-height: 1.5; }
   .counter-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); margin-top: 2px; }
 
-  /* ─── SIDEBAR FONT IMPROVEMENTS ───────────────────────── */
-  .section-title { font-size: 15px !important; color: #e8f4ff !important; }
-  .section-label { color: var(--accent) !important; }
-  .big-number    { font-size: 44px !important; }
-  .big-unit      { font-size: 13px !important; color: #a0bdd4 !important; }
-  .stat-label    { font-size: 11px !important; color: #a0bdd4 !important; }
-  .stat-val      { font-size: 14px !important; }
-  .bar-label-row { font-size: 11px !important; color: #a0bdd4 !important; }
-  .explanation   { font-size: 13px !important; color: #a0bdd4 !important; line-height: 1.7 !important; }
-  .no-data-note  { font-size: 11px !important; color: var(--text-muted) !important; }
+  /* ─── FOOTER ──────────────────────────────────────────── */
+  #footer {
+    position: fixed;
+    bottom: 0; left: 0px; width: 100%;
+    z-index: 1500;
+    /* background: rgba(6, 13, 23, 0.8); */
+    /* border-top: 1px solid rgba(255,255,255,0.1); */
+    padding: 8px 20px;
+    text-align: left;
+    box-sizing: border-box;
+  }
+  .footer-text {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    margin: 0;
+  }
+
+  /* ─── 手機版（768px 以下）─────────────────────────── */
+  @media (max-width: 768px) {
+    /* 手機版循環切換按鈕 */
+    #mobile-mode-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 10px;
+      padding: 5px 13px 5px 10px;
+      border-radius: 3px;
+      border: 1px solid;
+      background: transparent;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: opacity 0.2s;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    }
+    #mobile-mode-btn:active { opacity: 0.7; }
+    #mobile-mode-btn[data-mode="share"] {
+      border-color: rgba(97, 165, 194, 0.6);
+      color: #89c2d9;
+      background: rgba(42, 111, 151, 0.15);
+    }
+    #mobile-mode-btn[data-mode="probability"] {
+      border-color: rgba(90, 184, 150, 0.6);
+      color: #5ab896;
+      background: rgba(61, 158, 122, 0.15);
+    }
+    #mobile-mode-btn[data-mode="perCapita"] {
+      border-color: rgba(149, 149, 213, 0.6);
+      color: #9595d5;
+      background: rgba(112, 112, 192, 0.15);
+    }
+    .mobile-mode-icon { font-size: 14px; line-height: 1; }
+
+    /* 縮放按鈕、版權標示、footer 手機版全部隱藏 */
+    .leaflet-control-zoom        { display: none !important; }
+    .leaflet-control-attribution { display: none !important; }
+    #footer                      { display: none; }
+
+    /* 桌機版三個按鈕在手機版隱藏 */
+    #top-brand .mode-btns { display: none; }
+
+    /* Sidebar 手機版全屏（tab 維持右側不變）*/
+    :root { --sidebar-w: 100vw; }
+
+    /* 手機版 sidebar 內關閉按鈕：正常文件流，左對齊，上方留空行 */
+    #sidebar-close-mobile {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      position: relative;          /* 不 fixed，跟著 sidebar 文件流 */
+      background: transparent;
+      border: none;
+      color: rgba(160, 190, 220, 0.55);
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 24px 16px 8px 16px; /* 頂部 24px 作為空行，左對齊 */
+      transition: color 0.2s;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #sidebar-close-mobile:hover { color: var(--text-primary); }
+
+    /* ── 手機版資訊卡（底部滑出）────────────────────── */
+    #mobile-card-overlay {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0);
+      z-index: 3000;
+      pointer-events: none;
+      transition: background 0.35s;
+    }
+    #mobile-card-overlay.open {
+      background: transparent;
+      pointer-events: auto;
+    }
+    #mobile-card {
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 3100;
+      background: rgba(8,16,28,0.97);
+      border: 1px solid rgba(100,160,210,0.25);
+      border-bottom: none;
+      border-radius: 12px 12px 0 0;
+      max-height: 62vh;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
+    }
+    #mobile-card.open { transform: translateY(0); }
+    #mobile-card-header {
+      display: flex;
+      justify-content: flex-end;
+      padding: 10px 12px 0;
+      flex-shrink: 0;
+    }
+    #mobile-card-close {
+      background: transparent;
+      border: none;
+      color: rgba(160,190,220,0.5);
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: color 0.2s;
+    }
+    #mobile-card-close:hover { color: var(--text-primary); }
+    #mobile-card-content {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      flex: 1;
+    }
+    /* popup 內容在 mobile-card 裡，右側不需預留 × 按鈕空間 */
+    #mobile-card .pc-head { padding-right: 16px; }
+
+    /* Legend 手機版預設隱藏，上移至 90px 避開切換按鈕 */
+    #legend {
+      bottom: 90px;
+      transform: translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+    }
+    #legend.legend-open {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Legend 展開按鈕 */
+    #legend-toggle {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      position: fixed;
+      bottom: 35px;
+      left: 21px;
+      z-index: 1600;
+      background: rgba(11, 22, 35, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 6px 11px 6px 9px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: background 0.2s, color 0.2s;
+    }
+    #legend-toggle:hover  { background: var(--surface2); color: var(--text-primary); }
+    #legend-toggle:active { opacity: 0.7; }
+    #legend-toggle[aria-expanded="true"] { color: var(--text-primary); }
+    .legend-toggle-icon   { font-size: 13px; line-height: 1; }
+  }
 
   @media (max-width: 640px) {
     :root { --sidebar-w: 100vw; }
-    #header { padding: 14px 16px 28px; }
-    #mode-toggle { left: 12px; bottom: 16px; }
+    #top-brand { top: 14px; left: 14px; }
+    .brand-link { font-size: 13px; }
+    .map-title  { font-size: 17px; }
+    #footer { padding: 6px 15px; }
+    .footer-text { font-size: 9px; }
     #legend { left: 12px; }
-    #counter { right: 12px; bottom: 16px; }
+    #counter { right: 12px; bottom: 40px; }
   }
 </style>
 </head>
@@ -506,48 +867,75 @@
     <div id="map"></div>
   </div>
 
-  <!-- HEADER OVERLAY -->
-  <header id="header">
-    <a class="header-brand" href="index.html">404 : Ocean Not Found</a>
-    <div class="header-text">
-      <!--<div class="kicker">SDG 14 · 海洋生態保護</div>-->
-      <h1>全球海洋塑膠<br>污染溯源地圖</h1>
-      <p class="subtitle">資料來源：Our World in Data · Meijer et al. (2021)</p>
+  <!-- TOP BRAND (floating, no background) -->
+  <div id="top-brand">
+    <a class="brand-link" href="index.html">404 : Ocean Not Found</a>
+    <h1 class="map-title">全球海洋塑膠<br>污染溯源地圖</h1>
+    <!-- 桌機版三個視角切換按鈕，手機版隱藏 -->
+    <div class="mode-btns desktop-mode-btns">
+      <button class="mode-btn active" data-mode="share">污染衝擊</button>
+      <button class="mode-btn" data-mode="probability">地理歸因</button>
+      <button class="mode-btn" data-mode="perCapita">系統歸因</button>
     </div>
-    <div id="mode-toggle">
-      <div class="mode-label">視角</div>
-      <div class="mode-btns">
-        <button class="mode-btn active" data-mode="share">污染衝擊</button>
-        <button class="mode-btn" data-mode="probability">地理歸因</button>
-        <button class="mode-btn" data-mode="perCapita">系統歸因</button>
-      </div>
-    </div>
-  </header>
+    <!-- 手機版循環切換按鈕，桌機隱藏 -->
+    <button id="mobile-mode-btn" data-mode="share" aria-label="切換地圖視角">
+      <span class="mobile-mode-icon">⟳</span>
+      <span class="mobile-mode-label">污染衝擊</span>
+    </button>
+  </div>
 
   <!-- SIDEBAR -->
-  <aside id="sidebar" aria-hidden="true">
-    <div class="sidebar-header">
-      <div>
-        <div class="sidebar-kicker">Country Profile</div>
-        <div id="sidebar-country">—</div>
-        <div id="sidebar-country-en"></div>
+  <aside id="sidebar" class="collapsed" aria-label="搜尋與排行榜">
+    <!-- 手機版關閉按鈕（固定右上角，不隨內容捲動）-->
+    <button id="sidebar-close-mobile" aria-label="關閉">✕</button>
+    <div id="sidebar-search-wrap">
+      <div class="search-icon-wrap">
+        <span class="search-icon">🔍</span>
+        <input id="sidebar-search" type="text" placeholder="搜尋國家（英文）" autocomplete="off" spellcheck="false">
       </div>
-      <button id="close-btn" aria-label="關閉">✕</button>
     </div>
-    <div class="sidebar-body" id="sidebar-body"></div>
+    <div id="sidebar-search-results"></div>
+    <div id="sidebar-ranking-wrap">
+      <div id="sidebar-ranking-title">污染衝擊 Top 10</div>
+      <div id="sidebar-ranking-list"></div>
+    </div>
   </aside>
+  <button id="sidebar-tab" aria-label="展開或收合搜尋排行榜">
+    <span class="sidebar-tab-arrow">›</span>
+    <span class="sidebar-tab-text">搜尋・排行</span>
+  </button>
 
-  <!-- LEGEND (dynamic, updated by JS) -->
+  <!-- LEGEND -->
   <div id="legend">
     <div class="legend-title" id="legend-title">全球排放佔比</div>
     <div class="legend-items" id="legend-items"></div>
   </div>
+
+  <!-- 手機版 Legend 展開/收起按鈕 -->
+  <button id="legend-toggle" aria-label="展開圖例" aria-expanded="false">
+    <span class="legend-toggle-icon">▤</span>
+    <span class="legend-toggle-label">圖例</span>
+  </button>
 
   <!-- COUNTER -->
   <div id="counter">
     <div class="counter-num" id="counter-num">—</div>
     <div class="counter-label">公噸塑膠 · 本年度至今</div>
     <div style="font-family:var(--font-mono);font-size:8px;color:var(--text-faint);margin-top:3px;text-align:right;">*基於 2019 年數據推算</div>
+  </div>
+
+  <!-- 手機版資訊卡（從底部滑出）-->
+  <div id="mobile-card">
+    <div id="mobile-card-header">
+      <button id="mobile-card-close" aria-label="關閉">✕</button>
+    </div>
+    <div id="mobile-card-content"></div>
+  </div>
+  <div id="mobile-card-overlay"></div>
+
+  <!-- FOOTER -->
+  <div id="footer">
+    <p class="footer-text">資料來源：Our World in Data · Meijer et al. (2021)</p>
   </div>
 
 </div>
@@ -610,9 +998,7 @@ async function loadAllData() {
   });
   return countryData;
 }
-</script>
 
-<script>
 window.addEventListener('load', async function () {
 
   /* ── 1. 載入所有 CSV ── */
@@ -636,12 +1022,14 @@ window.addEventListener('load', async function () {
     zoom: 2,
     minZoom: 2,
     maxZoom: 8,
-    zoomControl: true,
+    zoomControl: false,  // 停用預設位置，下方另行指定 bottomright
     attributionControl: true,
     maxBounds: [[-85, -180], [85, 180]],   // 上下不超出
     maxBoundsViscosity: 1.0,               // 硬性限制，不可拖出邊界
     worldCopyJump: false,
   });
+
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
 
   // 底圖：無文字版，移除國家名稱 label
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
@@ -740,134 +1128,333 @@ window.addEventListener('load', async function () {
   }
   updateLegend(currentMode);
 
-  /* ── 6. Sidebar ── */
-  const sidebar          = document.getElementById('sidebar');
-  const sidebarCountry   = document.getElementById('sidebar-country');
-  const sidebarCountryEn = document.getElementById('sidebar-country-en');
-  const sidebarBody      = document.getElementById('sidebar-body');
-  const closeBtn         = document.getElementById('close-btn');
+  /* ── 6. Fallback coords for nations still missing from ne_50m GeoJSON ── */
+  // 切換至 ne_50m 後，原本 25 個 fallback 國家中有 24 個已有多邊形。
+  // 唯一例外：MTQ（法屬馬提尼克）—— Natural Earth 不把法國海外省
+  // 列為獨立 ISO 國家，50m 資料集中找不到對應的 ISO_A3 = MTQ 的 feature。
+  const FALLBACK_COORDS = {
+    MTQ: [14.64, -61.02, 9],   // Martinique（法國海外省，ne_50m 無此 ISO）
+  };
 
-  function fmtNum(n) {
-    if (n === null || n === undefined) return '—';
-    return Math.round(n).toLocaleString('zh-TW');
+  /* ── 6b. Pre-compute global rankings for all three metrics ── */
+  // rankMaps[metric][iso] = rank (1-based)
+  const rankMaps = {};
+  ['share', 'probability', 'perCapita'].forEach(metric => {
+    const m = MODES[metric];
+    const sorted = Object.values(countryData)
+      .filter(d => m.getVal(d) !== null)
+      .sort((a, b) => m.getVal(b) - m.getVal(a));
+    rankMaps[metric] = {};
+    sorted.forEach((d, i) => { rankMaps[metric][d.iso] = i + 1; });
+  });
+
+  function getRank(metric, iso) {
+    const r = rankMaps[metric]?.[iso];
+    return r ? `#${r} 全球` : null;
   }
-  function fmtDec(n, d = 2) {
-    if (n === null || n === undefined) return '—';
-    return n.toFixed(d);
+
+  /* ── 6c. Tagline logic (12 conditions) ── */
+  function buildTagline(d) {
+    const share = d.globalShare;
+    const prob  = d.probability;
+    const cap   = d.perCapita;
+    const noData = (share === null && prob === null && cap === null);
+    if (noData) return '目前該國尚無完整數據，污染狀況難以評估。';
+    if (share > 10 && prob > 8)   return '地理脆弱與系統失能交疊，使該國成為全球海洋塑膠污染的首要來源。';
+    if (share > 10 && cap > 15)   return '廢棄物管理體系的嚴重缺口，推動該國躍居全球海洋污染榜首。';
+    if (share > 10)                return '龐大的排放絕對量使該國在全球污染版圖中佔據核心位置。';
+    if (share > 1  && prob > 8)   return '高度脆弱的地形與河流條件，使塑膠極易從該國流入海洋。';
+    if (share > 1  && cap > 15)   return '廢棄物管理體系的缺口，使大量塑膠透過該國流入海洋。';
+    if (share > 1)                 return '該國對全球海洋污染有顯著貢獻，廢棄物治理仍有改善空間。';
+    if (prob > 8   && cap > 15)   return '雖然絕對排放量有限，但地理與系統雙重脆弱性不容忽視。';
+    if (prob > 8)                  return '獨特的地形與河流條件，使塑膠入海風險遠超污染總量所顯示的程度。';
+    if (cap > 15)                  return '人均廢棄物量偏高，反映出廢棄物管理基礎設施仍有待強化。';
+    if (share > 0.1 && cap > 3)   return '現有管理體系尚能控制污染輸出，但人均廢棄物量仍值得關注。';
+    return '相對健全的廢棄物管理體系，使該國對全球海洋污染的貢獻維持在低水準。';
   }
-  function probClass(p) {
-    if (p === null) return 'low';
-    if (p > 3) return 'high';
-    if (p > 1) return 'mid';
-    return 'low';
-  }
 
-  function openSidebar(d) {
-    sidebarCountry.textContent   = d.entityName;
-    sidebarCountryEn.textContent = d.iso;
+  /* ── 6d. Build popup HTML ── */
+  function buildPopupHTML(d) {
+    const fmtTons = n => n !== null ? Math.round(n).toLocaleString('zh-TW') : null;
+    const fmtDec  = (n, dec=2) => n !== null ? n.toFixed(dec) : null;
 
-    const pClass   = probClass(d.probability);
-    const shareBar = d.globalShare ? Math.min(d.globalShare / 40 * 100, 100) : 0;
-    const capBar   = d.perCapita   ? Math.min(d.perCapita / 50 * 100, 100) : 0;
-    const probBar  = d.probability ? Math.min(d.probability / 10 * 100, 100) : 0;
-    const naNote   = `<p class="no-data-note">此國家無此項資料</p>`;
+    const shareRank = getRank('share', d.iso);
+    const probRank  = getRank('probability', d.iso);
+    const capRank   = getRank('perCapita', d.iso);
+    const tagline   = buildTagline(d);
 
-    sidebarBody.innerHTML = `
-      <div class="data-section">
-        <div class="section-label">第一層 · Layer 1</div>
-        <div class="section-title">污染衝擊</div>
-        ${d.emittedTons !== null ? `
-          <div class="big-stat">
-            <span class="big-number">${fmtNum(d.emittedTons)}</span>
-            <span class="big-unit">公噸／年</span>
-          </div>
-          <p style="font-family:var(--font-mono);font-size:11px;color:#a0bdd4;">陸源塑膠年排海量</p>
-        ` : naNote}
-        ${d.globalShare !== null ? `
-          <div class="bar-container">
-            <div class="bar-label-row">
-              <span>佔全球排放份額</span>
-              <span style="color:var(--danger)">${fmtDec(d.globalShare)} %</span>
-            </div>
-            <div class="bar-track">
-              <div class="bar-fill danger" style="width:0%" data-target="${shareBar}%"></div>
-            </div>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">全球佔比</span>
-            <span class="stat-val">${fmtDec(d.globalShare)} %</span>
-          </div>
-        ` : ''}
+    const shareRow = d.emittedTons !== null ? `
+      <div class="pc-row">
+        <div class="pc-row-head">SDG 14.1 · 污染衝擊</div>
+        <div class="pc-row-main">
+          <span class="pc-val danger">${fmtTons(d.emittedTons)}</span>
+          <span class="pc-rank">${shareRank || ''}</span>
+        </div>
+        <div class="pc-sub">公噸／年　佔全球 ${fmtDec(d.globalShare)} %</div>
+      </div>` : `
+      <div class="pc-row">
+        <div class="pc-row-head">SDG 14.1 · 污染衝擊</div>
+        <div class="pc-nodata">無資料</div>
+      </div>`;
+
+    const probRow = d.probability !== null ? `
+      <div class="pc-row">
+        <div class="pc-row-head">地理歸因 · 入海機率</div>
+        <div class="pc-row-main">
+          <span class="pc-val teal">${fmtDec(d.probability)} %</span>
+          <span class="pc-rank">${probRank || ''}</span>
+        </div>
+      </div>` : `
+      <div class="pc-row">
+        <div class="pc-row-head">地理歸因 · 入海機率</div>
+        <div class="pc-nodata">無資料</div>
+      </div>`;
+
+    const capRow = d.perCapita !== null ? `
+      <div class="pc-row">
+        <div class="pc-row-head">系統歸因 · 人均廢棄物</div>
+        <div class="pc-row-main">
+          <span class="pc-val purple">${fmtDec(d.perCapita, 1)} kg</span>
+          <span class="pc-rank">${capRank || ''}</span>
+        </div>
+        <div class="pc-sub">人均／年</div>
+      </div>` : `
+      <div class="pc-row">
+        <div class="pc-row-head">系統歸因 · 人均廢棄物</div>
+        <div class="pc-nodata">無資料</div>
+      </div>`;
+
+    return `
+      <div class="pc-head">
+        <div class="pc-name">${d.entityName}</div>
+        <div class="pc-iso">${d.iso}</div>
       </div>
-
-      <div class="data-section">
-        <div class="section-label">第二層 · Layer 2</div>
-        <div class="section-title">地理歸因</div>
-        ${d.probability !== null ? `
-          <div class="prob-number ${pClass}">${fmtDec(d.probability)} %</div>
-          <div class="bar-container">
-            <div class="bar-track">
-              <div class="bar-fill ${pClass === 'high' ? 'danger' : pClass === 'mid' ? 'warn' : 'safe'}"
-                   style="width:0%" data-target="${probBar}%"></div>
-            </div>
-          </div>
-          <p class="explanation">管理不善塑膠經由河流最終入海的機率估算。受地形坡度、河流密度與沿岸距離影響，反映該國地理環境的脆弱性。</p>
-        ` : naNote}
-      </div>
-
-      <div class="data-section">
-        <div class="section-label">第三層 · Layer 3</div>
-        <div class="section-title">系統歸因</div>
-        ${d.perCapita !== null ? `
-          <div class="percap-number">${fmtDec(d.perCapita, 1)}
-            <span style="font-family:var(--font-mono);font-size:13px;color:#a0bdd4">公斤／人／年</span>
-          </div>
-          <div class="bar-container">
-            <div class="bar-label-row">
-              <span>相對強度（50 kg 為滿格）</span>
-              <span style="color:var(--warn)">${fmtDec(d.perCapita, 1)} kg</span>
-            </div>
-            <div class="bar-track">
-              <div class="bar-fill warn" style="width:0%" data-target="${capBar}%"></div>
-            </div>
-          </div>
-          <p class="explanation">每人每年產生的管理不善塑膠量，反映廢棄物收集體系與回收基礎設施的整體效率。數值越高，代表系統性失能越嚴重。</p>
-        ` : naNote}
-      </div>
-
-      <div style="padding:16px 24px;">
-        <p style="font-family:var(--font-mono);font-size:9px;color:var(--text-faint);line-height:1.7;">
-          資料來源：Our World in Data · Meijer et al. (2021). Science Advances, 7(18).
-        </p>
-      </div>
+      <div class="pc-tagline">${tagline}</div>
+      ${shareRow}${probRow}${capRow}
     `;
-
-    sidebar.classList.add('open');
-    sidebar.setAttribute('aria-hidden', 'false');
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        sidebarBody.querySelectorAll('.bar-fill').forEach(el => {
-          el.style.width = el.dataset.target;
-        });
-      }, 80);
-    });
   }
 
-  function closeSidebar() {
-    sidebar.classList.remove('open');
-    sidebar.setAttribute('aria-hidden', 'true');
-    if (activeLayer && geojsonLayer) {
-      geojsonLayer.resetStyle(activeLayer);
-      activeLayer = null;
+  /* ── 6e. Sidebar UI ── */
+  const sidebar       = document.getElementById('sidebar');
+  const sidebarTab    = document.getElementById('sidebar-tab');
+  const searchInput   = document.getElementById('sidebar-search');
+  const searchResults = document.getElementById('sidebar-search-results');
+  const rankingTitle  = document.getElementById('sidebar-ranking-title');
+  const rankingList   = document.getElementById('sidebar-ranking-list');
+
+  // Sidebar 收合 / 展開
+  function openSidebar() {
+    clearTimeout(sidebar._closeTimer);
+    if (!sidebar.classList.contains('opened')) {
+      sidebar.classList.add('opened');
+      sidebar.classList.remove('collapsed');
+      sidebarTab.querySelector('.sidebar-tab-arrow').textContent = '‹';
+      sidebarTab.style.right = 'var(--sidebar-w)';
     }
   }
 
-  closeBtn.addEventListener('click', closeSidebar);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+  function closeSidebar() {
+    if (!sidebar.classList.contains('opened') && sidebar.classList.contains('collapsed')) return;
+    sidebar.classList.remove('opened');
+    sidebar.classList.add('collapsed');
+    sidebarTab.querySelector('.sidebar-tab-arrow').textContent = '›';
+    sidebarTab.style.right = '0';
+  }
+
+  function scheduleCloseSidebar() {
+    clearTimeout(sidebar._closeTimer);
+    sidebar._closeTimer = setTimeout(() => {
+      if (!sidebar.matches(':hover') && !sidebarTab.matches(':hover')) {
+        closeSidebar();
+      }
+    }, 180);
+  }
+
+  sidebarTab.addEventListener('click', () => {
+    if (sidebar.classList.contains('collapsed')) {
+      openSidebar();
+    } else {
+      closeSidebar();
+    }
+  });
+  sidebarTab.addEventListener('mouseenter', openSidebar);
+  sidebar.addEventListener('mouseenter', openSidebar);
+  sidebar.addEventListener('mouseleave', scheduleCloseSidebar);
+  sidebarTab.addEventListener('mouseleave', scheduleCloseSidebar);
+
+  // 手機版側邊欄觸發 / 關閉
+  const mobileSidebarBtn   = document.getElementById('mobile-sidebar-btn');
+  const sidebarCloseMobile = document.getElementById('sidebar-close-mobile');
+  if (mobileSidebarBtn)   mobileSidebarBtn.addEventListener('click', openSidebar);
+  if (sidebarCloseMobile) sidebarCloseMobile.addEventListener('click', closeSidebar);
+
+  /* ── 8. Mode Toggle ── */
+
+  // 共用切換函式（桌機 + 手機按鈕共用）
+  function switchMode(mode) {
+    currentMode = mode;
+
+    // 更新桌機版三個 tab 按鈕 active 狀態
+    document.querySelectorAll('.mode-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+
+    // 更新手機版循環切換按鈕
+    const mobileBtn = document.getElementById('mobile-mode-btn');
+    if (mobileBtn) {
+      mobileBtn.dataset.mode = mode;
+      mobileBtn.querySelector('.mobile-mode-label').textContent = MODE_DISPLAY_LABELS[mode];
+      // 旋轉 icon 動畫
+      const icon = mobileBtn.querySelector('.mobile-mode-icon');
+      icon.classList.remove('spinning');
+      void icon.offsetWidth; // 強制 reflow，重新觸發 animation
+      icon.classList.add('spinning');
+    }
+
+    updateLegend(mode);
+    renderRanking(mode);
+    if (searchInput.value.trim()) searchInput.dispatchEvent(new Event('input'));
+    if (geojsonLayer) {
+      geojsonLayer.eachLayer(layer => {
+        const iso = layer.feature?.properties?.ISO_A3 || layer.feature?.properties?.iso_a3 || '';
+        if (iso) layer.setStyle({ fillColor: getColor(iso) });
+      });
+    }
+    // update fallback marker color if visible
+    if (fallbackMarker) {
+      const popup = map._popup;
+      const iso = popup ? Object.keys(FALLBACK_COORDS).find(k => {
+        const c = FALLBACK_COORDS[k];
+        return c && popup.getLatLng()?.lat === c[0] && popup.getLatLng()?.lng === c[1];
+      }) : null;
+      if (iso) fallbackMarker.setStyle({ fillColor: getColor(iso) });
+    }
+  }
+
+  // 桌機版三個 tab 按鈕
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+  });
+
+  // 手機版循環切換按鈕
+  const mobileModeBtn = document.getElementById('mobile-mode-btn');
+  if (mobileModeBtn) {
+    mobileModeBtn.addEventListener('click', () => {
+      const idx = MODE_ORDER.indexOf(currentMode);
+      const nextMode = MODE_ORDER[(idx + 1) % MODE_ORDER.length];
+      switchMode(nextMode);
+    });
+  }
+
+  const MODE_LABELS = {
+    share:       '污染衝擊 Top 10',
+    probability: '地理歸因 Top 10',
+    perCapita:   '系統歸因 Top 10',
+  };
+
+  // 與 CSS .mode-btn[data-mode="…"].active 的顏色保持一致
+  const MODE_TITLE_COLORS = {
+    share:       '#89c2d9',
+    probability: '#5ab896',
+    perCapita:   '#9595d5',
+  };
+
+  // 手機版循環切換用
+  const MODE_ORDER = ['share', 'probability', 'perCapita'];
+  const MODE_DISPLAY_LABELS = {
+    share:       '污染衝擊',
+    probability: '地理歸因',
+    perCapita:   '系統歸因',
+  };
+
+  function fmtModeVal(d, mode) {
+    const m = MODES[mode];
+    const v = m.getVal(d);
+    if (v === null || v === undefined) return '—';
+    if (mode === 'share')       return v.toFixed(2) + ' %';
+    if (mode === 'probability') return v.toFixed(2) + ' %';
+    if (mode === 'perCapita')   return v.toFixed(1) + ' kg';
+    return String(v);
+  }
+
+  function renderRanking(mode) {
+    rankingTitle.textContent = MODE_LABELS[mode];
+    // 標題文字與左側豎線同步切換成當前視角的對應色
+    const c = MODE_TITLE_COLORS[mode];
+    rankingTitle.style.color           = c;
+    rankingTitle.style.borderLeftColor = c;
+    const m = MODES[mode];
+    const sorted = Object.values(countryData)
+      .filter(d => m.getVal(d) !== null)
+      .sort((a, b) => m.getVal(b) - m.getVal(a))
+      .slice(0, 10);
+
+    rankingList.innerHTML = sorted.map((d, i) => `
+      <div class="ranking-item" data-iso="${d.iso}">
+        <span class="ranking-num">${i + 1}</span>
+        <span class="ranking-name">${d.entityName}</span>
+        <span class="ranking-val">${fmtModeVal(d, mode)}</span>
+      </div>
+    `).join('');
+
+    rankingList.querySelectorAll('.ranking-item').forEach(el => {
+      el.addEventListener('click', () => flyToCountry(el.dataset.iso));
+    });
+  }
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+    if (!q) {
+      searchResults.innerHTML = '';
+      searchResults.classList.remove('visible');
+      return;
+    }
+    const matches = Object.values(countryData)
+      .filter(d => d.entityName.toLowerCase().includes(q) || d.iso.toLowerCase().includes(q))
+      .slice(0, 8);
+
+    if (matches.length === 0) {
+      searchResults.innerHTML = '<div class="search-result-item"><span class="search-result-name" style="color:var(--text-faint)">找不到符合的國家</span></div>';
+    } else {
+      searchResults.innerHTML = matches.map(d => `
+        <div class="search-result-item" data-iso="${d.iso}">
+          <span class="search-result-name">${d.entityName}</span>
+          <span class="search-result-val">${fmtModeVal(d, currentMode)}</span>
+        </div>
+      `).join('');
+      searchResults.querySelectorAll('.search-result-item[data-iso]').forEach(el => {
+        el.addEventListener('click', () => {
+          flyToCountry(el.dataset.iso);
+          searchInput.value = '';
+          searchResults.innerHTML = '';
+          searchResults.classList.remove('visible');
+        });
+      });
+    }
+    searchResults.classList.add('visible');
+  });
+
+  searchInput.addEventListener('blur', () => {
+    setTimeout(() => {
+      searchResults.classList.remove('visible');
+      searchResults.innerHTML = '';
+    }, 150);
+  });
+
+  sidebar.addEventListener('mouseleave', () => {
+    if (!searchInput.matches(':focus')) {
+      searchResults.classList.remove('visible');
+      searchResults.innerHTML = '';
+    }
+  });
+
+  renderRanking('share');
 
   /* ── 7. GeoJSON Choropleth ── */
   let geojsonLayer = null;
   let activeLayer  = null;
+  let fallbackMarker = null; // marker for small nations not in GeoJSON
+  let isDragging   = false;  // Bug 2：追蹤拖曳狀態，抑制拖曳時觸發 tooltip
 
   const DEFAULT_STYLE = { weight: 0.4, color: '#0a1520', opacity: 1, fillOpacity: 0.88 };
 
@@ -894,20 +1481,84 @@ window.addEventListener('load', async function () {
     `;
   }
 
+  // ── isMobile ──
+  function isMobile() { return window.innerWidth <= 768; }
+
+  // ── openPopupForData：開啟 Popup（多邊形或 fallback marker 共用）──
+  // Bug 1 Fix：autoPan: false 避免地圖平移後因 maxBounds 彈回；
+  //            實際位置修正改由 map.on('popupopen') 的 CSS transform 處理。
+  // 手機版：改用底部滑出卡片，不使用 Leaflet popup。
+  function openPopupForData(d, latlng) {
+    if (isMobile()) {
+      openMobileCard(d);
+      return;
+    }
+    L.popup({
+      maxWidth: window.innerWidth < 640 ? 280 : 340,
+      minWidth: 260,
+      className: 'sdg-popup',
+      autoPan: false,
+      keepInView: false,
+      offset: [0, -10],
+    })
+      .setLatLng(latlng)
+      .setContent(buildPopupHTML(d))
+      .openOn(map);
+  }
+
+  function openMobileCard(d) {
+    const card    = document.getElementById('mobile-card');
+    const content = document.getElementById('mobile-card-content');
+    const overlay = document.getElementById('mobile-card-overlay');
+    if (!card || !content) return;
+    content.innerHTML = buildPopupHTML(d);
+    content.scrollTop = 0;           // 每次開啟捲回頂部
+    card.classList.add('open');
+    if (overlay) overlay.classList.add('open');
+  }
+
+  function closeMobileCard() {
+    const card    = document.getElementById('mobile-card');
+    const overlay = document.getElementById('mobile-card-overlay');
+    if (!card || !card.classList.contains('open')) return;
+    card.classList.remove('open');
+    if (overlay) overlay.classList.remove('open');
+    // fallbackMarker 清理（手機版取代 popupclose 事件）
+    if (fallbackMarker) { fallbackMarker.remove(); fallbackMarker = null; }
+    // 重置 activeLayer 高亮
+    if (activeLayer && geojsonLayer) {
+      geojsonLayer.resetStyle(activeLayer);
+      activeLayer = null;
+    }
+  }
+
   function onEachFeature(feature, layer) {
     const iso = feature.properties.ISO_A3 || feature.properties.iso_a3 || '';
     const d   = countryData[iso];
     if (!d) return;
 
-    layer.bindTooltip(buildTooltip(d), { sticky: false, className: '', direction: 'top' });
+    //layer.bindTooltip(buildTooltip(d), { sticky: false, className: '', direction: 'top' });
+    layer.bindTooltip(buildTooltip(d), {
+      sticky: false,
+      direction: 'top',
+      opacity: 0.9,
+      permanent: false // 確保它不是永久顯示的
+    });
 
     layer.on({
+      // 在 onEachFeature 函數內修改
       mouseover(e) {
+        // Bug 2 Fix：拖曳中或地圖正在移動時，跳過 hover 效果
+        if (isDragging || map.dragging.moving()) return;
+
         e.target.setStyle({ weight: 1.5, color: '#7ab8d4', fillOpacity: 1 });
         e.target.bringToFront();
         document.body.style.cursor = 'pointer';
-        // Update tooltip content for current mode
-        e.target.getTooltip()?.setContent(buildTooltip(d));
+
+        const tooltip = e.target.getTooltip();
+        if (tooltip) {
+          tooltip.setContent(buildTooltip(d));
+        }
       },
       mouseout(e) {
         if (e.target !== activeLayer) geojsonLayer?.resetStyle(e.target);
@@ -919,36 +1570,138 @@ window.addEventListener('load', async function () {
         activeLayer = e.target;
         e.target.setStyle({ weight: 2, color: '#c8e0f0', fillOpacity: 1 });
         e.target.bringToFront();
-        openSidebar(d);
+        openPopupForData(d, e.latlng);
       },
     });
   }
 
-  fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+  fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
     .then(r => r.json())
     .then(data => {
       geojsonLayer = L.geoJSON(data, { style: styleFeature, onEachFeature }).addTo(map);
     });
 
-  map.on('click', () => closeSidebar());
+  map.on('click', () => {
+    if (activeLayer && geojsonLayer) {
+      geojsonLayer.resetStyle(activeLayer);
+      activeLayer = null;
+    }
+    closeMobileCard(); // 手機版：點擊地圖空白處關閉卡片
+  });
 
-  /* ── 8. Mode Toggle ── */
-  document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentMode = btn.dataset.mode;
-      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      updateLegend(currentMode);
-      if (geojsonLayer) {
-        geojsonLayer.eachLayer(layer => {
-          const iso = layer.feature?.properties?.ISO_A3 || layer.feature?.properties?.iso_a3 || '';
-          if (iso && iso !== activeLayer?.feature?.properties?.ISO_A3) {
-            layer.setStyle({ fillColor: getColor(iso) });
-          }
+  // 修正 fallbackMarker 殘留：任何 popup 關閉時都清掉標記點
+  // （普通國家的 fallbackMarker 本來就是 null，所以不影響）
+  map.on('popupclose', function () {
+    if (fallbackMarker) {
+      fallbackMarker.remove();
+      fallbackMarker = null;
+    }
+  });
+
+  // ── Bug 1 Fix：popup 開啟後，若超出 header 下緣則用 setLatLng 往下移錨點 ──
+  // Leaflet 1.9 以 CSS transform:translate3d 定位 popup 元素，
+  // 直接改 el.style.transform 會覆蓋 Leaflet 的定位資訊造成跑版。
+  // 正確做法：先隱藏（避免閃動）→ rAF 量真實位置 → setLatLng 調整錨點 → 顯示。
+  // .leaflet-popup-tip-container 已隱藏，anchor 偏移不影響視覺。
+  map.on('popupopen', function (e) {
+    const el = e.popup.getElement();
+    if (!el) return;
+    el.style.visibility = 'hidden'; // 遮住，量位置時不閃動
+    requestAnimationFrame(() => {
+      const rect = el.getBoundingClientRect();
+      // 無固定 header，HEADER_H 以左上角 top-brand 浮層底部估算
+      // top-brand: top:22px + 回首頁連結(16px) + gap(6px) + 標題(21px×1.28×2行≈54px) ≈ 98px
+      const HEADER_H = window.innerWidth < 640 ? 80 : 100;
+      const MARGIN   = 10;
+      if (rect.top < HEADER_H + MARGIN) {
+        const overflow     = (HEADER_H + MARGIN) - rect.top;
+        const anchorLatLng = e.popup.getLatLng();
+        const anchorPt     = map.latLngToContainerPoint(anchorLatLng);
+        // 把錨點往南（螢幕向下）移，popup 跟著往下
+        e.popup.setLatLng(
+          map.containerPointToLatLng(L.point(anchorPt.x, anchorPt.y + overflow))
+        );
+      }
+      el.style.visibility = ''; // 顯示（已在正確位置）
+    });
+  });
+
+  // ── Bug 2 Fix：拖曳狀態追蹤 + tooltip 攔截 ──
+  map.on('dragstart', () => {
+    isDragging = true;
+  });
+  map.on('dragend', () => {
+    // 加一點延遲，避免 dragend 後的 mouseover 立刻觸發 tooltip
+    setTimeout(() => { isDragging = false; }, 200);
+  });
+  // Leaflet 的 bindTooltip 內部機制獨立於我們的 mouseover handler，
+  // 用 tooltipopen 事件攔截並立即關閉，確保拖曳時完全不顯示。
+  map.on('tooltipopen', function (e) {
+    if (isDragging) {
+      map.closeTooltip(e.tooltip);
+    }
+  });
+
+  // ── flyToCountry：支援 GeoJSON 多邊形 + fallback 小國座標 ──
+  function flyToCountry(iso) {
+    if (!geojsonLayer) return;
+    let found = false;
+
+    geojsonLayer.eachLayer(layer => {
+      const layerIso = layer.feature?.properties?.ISO_A3 || layer.feature?.properties?.iso_a3 || '';
+      if (layerIso !== iso) return;
+      found = true;
+      const bounds = layer.getBounds();
+      // maxZoom 提高到 8（地圖上限），避免小島國縮放不足看不到
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 8 });
+      // Reset previous active layer
+      if (activeLayer && geojsonLayer) geojsonLayer.resetStyle(activeLayer);
+      activeLayer = layer;
+      layer.setStyle({ weight: 2, color: '#c8e0f0', fillOpacity: 1 });
+      layer.bringToFront();
+      const d = countryData[iso];
+      if (d) {
+        map.once('moveend', () => {
+          openPopupForData(d, bounds.getCenter());
         });
       }
     });
-  });
+
+    // Fallback for small nations absent from ne_110m
+    if (!found) {
+      const coords = FALLBACK_COORDS[iso];
+      const d = countryData[iso];
+      if (!coords || !d) return;
+      const [lat, lng, zoom] = coords;
+      map.setView([lat, lng], zoom, { animate: true });
+      if (fallbackMarker) { fallbackMarker.remove(); fallbackMarker = null; }
+      fallbackMarker = L.circleMarker([lat, lng], {
+        radius: 8, color: '#c8e0f0', weight: 2,
+        fillColor: getColor(iso), fillOpacity: 0.9,
+      }).addTo(map);
+      map.once('moveend', () => {
+        openPopupForData(d, [lat, lng]);
+      });
+    }
+  }
+
+  /* ── Mobile Card 事件綁定（關閉按鈕 + 遮罩點擊）── */
+  const mobileCardClose   = document.getElementById('mobile-card-close');
+  const mobileCardOverlay = document.getElementById('mobile-card-overlay');
+  if (mobileCardClose)   mobileCardClose.addEventListener('click', closeMobileCard);
+  if (mobileCardOverlay) mobileCardOverlay.addEventListener('click', closeMobileCard);
+
+  /* ── Legend Toggle（手機版展開/收起）── */
+  const legendToggle = document.getElementById('legend-toggle');
+  const legendEl     = document.getElementById('legend');
+  if (legendToggle && legendEl) {
+    legendToggle.addEventListener('click', () => {
+      const isOpen = legendEl.classList.toggle('legend-open');
+      legendToggle.setAttribute('aria-expanded', isOpen);
+      legendToggle.querySelector('.legend-toggle-icon').textContent  = isOpen ? '✕' : '▤';
+      legendToggle.querySelector('.legend-toggle-label').textContent = isOpen ? '關閉' : '圖例';
+    });
+  }
 
   /* ── 9. Live Counter（全球總量 979,458 公噸/年）── */
   const totalAnnual = 979458;
